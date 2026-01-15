@@ -1,0 +1,102 @@
+using Windows.UI.Notifications;
+using Windows.Data.Xml.Dom;
+using BluetoothManager.Core.Events;
+using BluetoothManager.Core.Models;
+
+namespace BluetoothManager.Core.Services;
+
+/// <summary>
+/// Service for showing Windows notifications
+/// </summary>
+public class NotificationService
+{
+    private const string AppId = "BluetoothManager";
+    private readonly ConfigService _configService;
+
+    public NotificationService(ConfigService configService)
+    {
+        _configService = configService;
+    }
+
+    /// <summary>
+    /// Shows a device connection notification
+    /// </summary>
+    public void ShowConnectionNotification(DeviceConnectionChangedEventArgs args)
+    {
+        if (!_configService.Settings.ShowConnectionNotifications)
+            return;
+
+        var title = args.IsConnected ? "Device Connected" : "Device Disconnected";
+        var message = args.DeviceName ?? "Unknown Device";
+        var icon = args.IsConnected ? "🔗" : "🔌";
+
+        ShowToast(title, $"{icon} {message}");
+    }
+
+    /// <summary>
+    /// Shows a low battery notification
+    /// </summary>
+    public void ShowLowBatteryNotification(DeviceBatteryChangedEventArgs args)
+    {
+        if (!_configService.Settings.ShowLowBatteryNotifications)
+            return;
+
+        if (!args.NewBatteryLevel.HasValue)
+            return;
+
+        var threshold = _configService.Settings.LowBatteryThreshold;
+        if (args.NewBatteryLevel.Value > threshold)
+            return;
+
+        // Don't notify if we already notified for this level range
+        if (args.OldBatteryLevel.HasValue && args.OldBatteryLevel.Value <= threshold)
+            return;
+
+        var title = "Low Battery Warning";
+        var message = $"🔋 {args.DeviceName ?? "Device"}: {args.NewBatteryLevel}%";
+
+        ShowToast(title, message);
+    }
+
+    /// <summary>
+    /// Shows a generic toast notification
+    /// </summary>
+    public void ShowToast(string title, string message, string? imageUri = null)
+    {
+        try
+        {
+            var template = ToastTemplateType.ToastText02;
+            var toastXml = ToastNotificationManager.GetTemplateContent(template);
+
+            var textNodes = toastXml.GetElementsByTagName("text");
+            textNodes[0].AppendChild(toastXml.CreateTextNode(title));
+            textNodes[1].AppendChild(toastXml.CreateTextNode(message));
+
+            // Add image if provided
+            if (!string.IsNullOrEmpty(imageUri))
+            {
+                var imageTemplate = ToastTemplateType.ToastImageAndText02;
+                toastXml = ToastNotificationManager.GetTemplateContent(imageTemplate);
+                
+                textNodes = toastXml.GetElementsByTagName("text");
+                textNodes[0].AppendChild(toastXml.CreateTextNode(title));
+                textNodes[1].AppendChild(toastXml.CreateTextNode(message));
+
+                var imageNodes = toastXml.GetElementsByTagName("image");
+                ((XmlElement)imageNodes[0]).SetAttribute("src", imageUri);
+            }
+
+            // Create and show the toast
+            var toast = new ToastNotification(toastXml)
+            {
+                ExpirationTime = DateTimeOffset.Now.AddMinutes(5)
+            };
+
+            ToastNotificationManager.CreateToastNotifier(AppId).Show(toast);
+        }
+        catch
+        {
+            // Ignore notification errors
+        }
+    }
+}

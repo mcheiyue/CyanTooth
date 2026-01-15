@@ -1,0 +1,342 @@
+using System.Runtime.InteropServices;
+using BluetoothManager.Platform.Native;
+using Vanara.PInvoke;
+using static Vanara.PInvoke.CoreAudio;
+
+namespace BluetoothManager.Platform.Audio;
+
+/// <summary>
+/// Enumerates Bluetooth audio endpoints using CoreAudio API
+/// </summary>
+public class AudioEndpointEnumerator : IDisposable
+{
+    private IMMDeviceEnumerator? _deviceEnumerator;
+    private readonly List<AudioEndpointInfo> _endpoints = new();
+
+    public AudioEndpointEnumerator()
+    {
+        _deviceEnumerator = new IMMDeviceEnumerator();
+    }
+
+    /// <summary>
+    /// Gets all Bluetooth audio render endpoints (following BluetoothDevicePairing reference implementation)
+    /// </summary>
+    public IReadOnlyList<AudioEndpointInfo> GetBluetoothAudioEndpoints()
+    {
+        _endpoints.Clear();
+
+        if (_deviceEnumerator == null) return _endpoints;
+
+        try
+        {
+            // Enumerate ALL audio endpoints (not just active) - matching reference implementation
+            var collection = _deviceEnumerator.EnumAudioEndpoints(EDataFlow.eAll, DEVICE_STATE.DEVICE_STATEMASK_ALL);
+            
+            uint count = collection.GetCount();
+            Helpers.DebugLogger.Log($"GetBluetoothAudioEndpoints: total audio endpoints={count}");
+
+            for (uint i = 0; i < count; i++)
+            {
+                collection.Item(i, out var device);
+                if (device == null) continue;
+
+                try
+                {
+                    // Get device topology
+                    var topology = device.Activate<IDeviceTopology>(Ole32.CLSCTX.CLSCTX_ALL);
+                    if (topology == null) continue;
+
+                    uint connectorCount = topology.GetConnectorCount();
+                    
+                    for (uint j = 0; j < connectorCount; j++)
+                    {
+                        try
+                        {
+                            var connector = topology.GetConnector(j);
+                            
+                            // Get the connected-to connector
+                            IConnector? connectedTo = null;
+                            try
+                            {
+                                connectedTo = connector.GetConnectedTo();
+                            }
+                            catch
+                            {
+                                continue; // Not connected
+                            }
+                            
+                            if (connectedTo == null) continue;
+
+                            // Get the topology object of the connected part
+                            var connectedPart = (IPart)connectedTo;
+                            var connectedTopology = connectedPart.GetTopologyObject();
+                            string connectedDeviceId = connectedTopology.GetDeviceId();
+
+                            // Check if this is a Bluetooth device - key check from reference!
+                            // The connected device ID should start with "{2}.\\?\bth"
+                            if (!connectedDeviceId.StartsWith(@"{2}.\\?\bth", StringComparison.OrdinalIgnoreCase))
+                            {
+                                continue;
+                            }
+
+                            Helpers.DebugLogger.Log($"GetBluetoothAudioEndpoints: found BT device, connectedDeviceId={connectedDeviceId}");
+
+                            // Get the connected device and activate IKsControl on it
+                            var connectedDevice = _deviceEnumerator.GetDevice(connectedDeviceId);
+                            IKsControl? ksControl = null;
+                            try
+                            {
+                                ksControl = connectedDevice.Activate<IKsControl>(Ole32.CLSCTX.CLSCTX_ALL);
+                            }
+                            catch (Exception ex)
+                            {
+                                Helpers.DebugLogger.Log($"GetBluetoothAudioEndpoints: failed to activate IKsControl: {ex.Message}");
+                            }
+
+                            // Get endpoint properties
+                            string deviceId = device.GetId();
+                            var propertyStore = device.OpenPropertyStore(STGM.STGM_READ);
+                            
+                            string friendlyName = "Unknown";
+                            try
+                            {
+                                var friendlyNameKey = new Ole32.PROPERTYKEY(new Guid("a45c254e-df1c-4efd-8020-67d146a850e0"), 14);
+                                var friendlyNameProp = propertyStore.GetValue(friendlyNameKey);
+                                if (friendlyNameProp != null)
+                                    friendlyName = friendlyNameProp.ToString() ?? "Unknown";
+                            }
+                            catch { }
+
+                            Guid containerId = Guid.Empty;
+                            try
+                            {
+                                containerId = (Guid)propertyStore.GetValue(Ole32.PROPERTYKEY.System.Devices.ContainerId);
+                            }
+                            catch { }
+
+                            var endpointInfo = new AudioEndpointInfo
+                            {
+                                DeviceId = deviceId,
+                                FriendlyName = friendlyName,
+                                ContainerId = containerId,
+                                IsBluetooth = true,
+                                KsControl = ksControl,
+                                MMDevice = device,
+                                ConnectedDeviceId = connectedDeviceId  // Save for MAC matching
+                            };
+
+                            _endpoints.Add(endpointInfo);
+                            Helpers.DebugLogger.Log($"GetBluetoothAudioEndpoints: added endpoint Name={friendlyName}, HasKsControl={ksControl != null}");
+                        }
+                        catch (Exception ex)
+                        {
+                            Helpers.DebugLogger.Log($"GetBluetoothAudioEndpoints: connector error: {ex.Message}");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Helpers.DebugLogger.Log($"GetBluetoothAudioEndpoints: device error: {ex.Message}");
+                }
+            }
+        }
+        catch (COMException ex)
+        {
+            Helpers.DebugLogger.Log($"GetBluetoothAudioEndpoints: COM error: {ex.Message}");
+        }
+
+        Helpers.DebugLogger.Log($"GetBluetoothAudioEndpoints: returning {_endpoints.Count} endpoints");
+        return _endpoints;
+    }
+
+    /// <summary>
+    /// Gets audio endpoint info for a specific device
+    /// </summary>
+    private AudioEndpointInfo? GetEndpointInfo(IMMDevice device)
+    {
+        try
+        {
+            string deviceId = device.GetId();
+            var propertyStore = device.OpenPropertyStore(STGM.STGM_READ);
+
+            // Get friendly name - PKEY_Device_FriendlyName
+            var friendlyNameKey = new Ole32.PROPERTYKEY(new Guid("a45c254e-df1c-4efd-8020-67d146a850e0"), 14);
+            string friendlyName = "Unknown";
+            try
+            {
+                var friendlyNameProp = propertyStore.GetValue(friendlyNameKey);
+                if (friendlyNameProp != null)
+                {
+                    friendlyName = friendlyNameProp.ToString() ?? "Unknown";
+                }
+            }
+            catch { }
+
+            // Get container ID - PKEY_Devices_ContainerId
+            var containerIdKey = new Ole32.PROPERTYKEY(new Guid("8c7ed206-3f8a-4827-b3ab-ae9e1faefc6c"), 2);
+            Guid containerId = Guid.Empty;
+            try
+            {
+                var containerIdProp = propertyStore.GetValue(containerIdKey);
+                if (containerIdProp is Guid guid)
+                {
+                    containerId = guid;
+                }
+            }
+            catch { }
+
+            // Check if this is a Bluetooth device by examining the device ID
+            bool isBluetooth = IsBluetoothEndpoint(deviceId);
+
+            // Try to get the IKsControl interface for Bluetooth audio control
+            IKsControl? ksControl = null;
+            if (isBluetooth)
+            {
+                ksControl = TryGetKsControl(device);
+            }
+
+            return new AudioEndpointInfo
+            {
+                DeviceId = deviceId,
+                FriendlyName = friendlyName,
+                ContainerId = containerId,
+                IsBluetooth = isBluetooth,
+                KsControl = ksControl,
+                MMDevice = device
+            };
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Determines if an audio endpoint is a Bluetooth device
+    /// </summary>
+    private static bool IsBluetoothEndpoint(string deviceId)
+    {
+        // Bluetooth audio endpoints typically have IDs containing "bth" or "BTHENUM"
+        return deviceId.Contains("bth", StringComparison.OrdinalIgnoreCase) ||
+               deviceId.Contains("BTHENUM", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Attempts to get the IKsControl interface for Bluetooth audio control
+    /// </summary>
+    private static IKsControl? TryGetKsControl(IMMDevice device)
+    {
+        try
+        {
+            // Activate IDeviceTopology to get to the connector
+            var topology = device.Activate<IDeviceTopology>(Ole32.CLSCTX.CLSCTX_ALL);
+            if (topology == null) return null;
+
+            uint connectorCount = topology.GetConnectorCount();
+            if (connectorCount == 0) return null;
+
+            var connector = topology.GetConnector(0);
+            
+            // Get the connected connector (the one on the adapter side)
+            var connectedConnector = connector.GetConnectedTo();
+            if (connectedConnector == null) return null;
+            
+            // Try to get IKsControl from the connected connector
+            var part = (IPart)connectedConnector;
+            var ksControlObj = part.Activate(Ole32.CLSCTX.CLSCTX_ALL, KsInterop.IID_IKsControl);
+            
+            return ksControlObj as IKsControl;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Finds the audio endpoint associated with a Bluetooth device by container ID
+    /// </summary>
+    public AudioEndpointInfo? FindEndpointByContainerId(Guid containerId)
+    {
+        var endpoints = GetBluetoothAudioEndpoints();
+        return endpoints.FirstOrDefault(e => e.ContainerId == containerId);
+    }
+
+    /// <summary>
+    /// Finds audio endpoints associated with a Bluetooth MAC address
+    /// </summary>
+    public IEnumerable<AudioEndpointInfo> FindEndpointsByMacAddress(ulong macAddress) 
+        => FindEndpointsByMacAddress(macAddress, null);
+
+    /// <summary>
+    /// Finds audio endpoints associated with a Bluetooth MAC address and/or device name.
+    /// This also matches Hands-Free endpoints by device name when MAC matching fails.
+    /// </summary>
+    public IEnumerable<AudioEndpointInfo> FindEndpointsByMacAddress(ulong macAddress, string? deviceName)
+    {
+        // Format MAC as uppercase hex without separators (e.g., "9505BB2CF7F4")
+        string macHex = macAddress.ToString("X12");
+        
+        Helpers.DebugLogger.Log($"FindEndpointsByMacAddress: looking for MAC={macHex}, DeviceName={deviceName ?? "null"}");
+        
+        var endpoints = GetBluetoothAudioEndpoints();
+        
+        Helpers.DebugLogger.Log($"FindEndpointsByMacAddress: found {endpoints.Count} BT endpoints total");
+        
+        foreach (var ep in endpoints)
+        {
+            Helpers.DebugLogger.Log($"FindEndpointsByMacAddress: endpoint Name={ep.FriendlyName}, ConnectedDeviceId={ep.ConnectedDeviceId ?? "null"}");
+        }
+        
+        // Match using ConnectedDeviceId which contains the MAC address
+        // Format: {2}.\\?\bthenum#dev_9505bb2cf7f4...
+        var matchedByMac = endpoints.Where(e => 
+            e.ConnectedDeviceId != null && 
+            e.ConnectedDeviceId.Contains(macHex, StringComparison.OrdinalIgnoreCase)).ToList();
+            
+        Helpers.DebugLogger.Log($"FindEndpointsByMacAddress: {matchedByMac.Count} matched by MAC");
+        
+        // Also match Hands-Free endpoints by device name
+        // HFP endpoints are named like "耳机 (Device Name Hands-Free AG Audio)" or "Device Name Hands-Free AG Audio"
+        if (!string.IsNullOrEmpty(deviceName))
+        {
+            var matchedByName = endpoints.Where(e => 
+                !matchedByMac.Any(m => m.DeviceId == e.DeviceId) && // Not already matched by MAC
+                e.FriendlyName.Contains("Hands-Free", StringComparison.OrdinalIgnoreCase) &&
+                e.FriendlyName.Contains(deviceName, StringComparison.OrdinalIgnoreCase)).ToList();
+                
+            Helpers.DebugLogger.Log($"FindEndpointsByMacAddress: {matchedByName.Count} additional Hands-Free matched by name");
+            
+            matchedByMac.AddRange(matchedByName);
+        }
+        
+        Helpers.DebugLogger.Log($"FindEndpointsByMacAddress: {matchedByMac.Count} total matched");
+        
+        return matchedByMac;
+    }
+
+    public void Dispose()
+    {
+        _endpoints.Clear();
+        if (_deviceEnumerator != null)
+        {
+            Marshal.ReleaseComObject(_deviceEnumerator);
+            _deviceEnumerator = null;
+        }
+    }
+}
+
+public class AudioEndpointInfo
+{
+    public required string DeviceId { get; init; }
+    public required string FriendlyName { get; init; }
+    public Guid ContainerId { get; init; }
+    public bool IsBluetooth { get; init; }
+    public IKsControl? KsControl { get; init; }
+    public IMMDevice? MMDevice { get; init; }
+    /// <summary>
+    /// The connected Bluetooth device ID (format: {2}.\\?\bthenum#dev_XXXXXXXXXXXX...)
+    /// This contains the MAC address and is used for matching
+    /// </summary>
+    public string? ConnectedDeviceId { get; init; }
+}

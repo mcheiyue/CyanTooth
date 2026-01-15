@@ -1,0 +1,83 @@
+# Visual Studio
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build Results
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+debug.log
+crash.log
+
+# NuGet
+*.nupkg
+*.snupkg
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# .NET Core
+*.project.json
+*.jfm
+.dotnet/
+*.runtimeconfig.json
+
+# Test Results
+TestResult.xml
+*.VisualState.xml
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Python (for scripts in code/ directory)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# C++ (for code/ToothTray)
+*.exe
+*.dll
+*.obj
+*.idb
+*.pdb
+*.pch
+*.ipch
+*.ilk
+*.tlog
+
+# Rust (for code/BlueGauge)
+/target/
+**/*.rs.bk
+
+# Node.js (for tools)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Reference Code
+code/
