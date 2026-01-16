@@ -1,8 +1,8 @@
-<Application x:Class="BluetoothManager.App"
+<Application x:Class="CyanTooth.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-             ShutdownMode="OnExplicitShutdown">
+             xmlns:vm="clr-namespace:CyanTooth.ViewModels"
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>

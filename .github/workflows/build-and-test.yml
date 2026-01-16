@@ -24,10 +24,10 @@ jobs:
         dotnet-version: '8.0.x'
     
     - name: 还原依赖
-      run: dotnet restore
+      run: dotnet restore CyanTooth.sln
     
     - name: 构建项目
-      run: dotnet build --configuration ${{ matrix.configuration }} --no-restore
+      run: dotnet build CyanTooth.sln --configuration ${{ matrix.configuration }} --no-restore
     
     - name: 运行测试
       if: matrix.platform == 'x64' # 只在 x64 上运行测试

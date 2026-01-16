@@ -29,7 +29,7 @@ jobs:
     # 1. 构建轻量版 (Framework-dependent)
     - name: 构建 x64 轻量版 (需要 .NET 8)
       run: |
-        dotnet publish src/BluetoothManager/BluetoothManager.csproj `
+        dotnet publish src/CyanTooth/CyanTooth.csproj `
           --configuration Release `
           --runtime win-x64 `
           --self-contained false `
@@ -38,7 +38,7 @@ jobs:
     
     - name: 构建 ARM64 轻量版 (需要 .NET 8)
       run: |
-        dotnet publish src/BluetoothManager/BluetoothManager.csproj `
+        dotnet publish src/CyanTooth/CyanTooth.csproj `
           --configuration Release `
           --runtime win-arm64 `
           --self-contained false `
@@ -48,7 +48,7 @@ jobs:
     # 2. 构建完整版 (Self-contained + Compressed)
     - name: 构建 x64 完整版 (无需 .NET)
       run: |
-        dotnet publish src/BluetoothManager/BluetoothManager.csproj `
+        dotnet publish src/CyanTooth/CyanTooth.csproj `
           --configuration Release `
           --runtime win-x64 `
           --self-contained true `
@@ -60,7 +60,7 @@ jobs:
     
     - name: 构建 ARM64 完整版 (无需 .NET)
       run: |
-        dotnet publish src/BluetoothManager/BluetoothManager.csproj `
+        dotnet publish src/CyanTooth/CyanTooth.csproj `
           --configuration Release `
           --runtime win-arm64 `
           --self-contained true `
