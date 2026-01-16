@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BluetoothManager.Platform\BluetoothManager.Platform.csproj" />
+    <ProjectReference Include="..\CyanTooth.Platform\CyanTooth.Platform.csproj" />
   </ItemGroup>
 
 </Project>

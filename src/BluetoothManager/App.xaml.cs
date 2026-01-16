@@ -1,3 +1,6 @@
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 using BluetoothManager.Core.Helpers;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;

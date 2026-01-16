@@ -3,7 +3,8 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>CyanTooth</AssemblyName>
+    <Product>CyanTooth</Product>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
@@ -28,7 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BluetoothManager.Core\BluetoothManager.Core.csproj" />
+    <ProjectReference Include="..\CyanTooth.Core\CyanTooth.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

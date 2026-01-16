@@ -575,12 +575,12 @@ Windows 原生蓝牙驱动仅支持基础编解码器 (SBC)，导致：
 ### 3.2 项目结构
 
 ```
-BluetoothManager/
-├── BluetoothManager.sln
+CyanTooth/
+├── CyanTooth.sln
 ├── src/
-│   ├── BluetoothManager/                 # 主项目 (WPF)
+│   ├── CyanTooth/                 # 主项目 (WPF)
 │   │   ├── App.xaml(.cs)
-│   │   ├── BluetoothManager.csproj
+│   │   ├── CyanTooth.csproj
 │   │   │
 │   │   ├── Views/                        # XAML 视图
 │   │   │   ├── TrayIconView.xaml         # 托盘图标资源
@@ -606,8 +606,8 @@ BluetoothManager/
 │   │       ├── Icons/
 │   │       └── Strings/
 │   │
-│   ├── BluetoothManager.Core/            # 核心业务逻辑
-│   │   ├── BluetoothManager.Core.csproj
+│   ├── CyanTooth.Core/            # 核心业务逻辑
+│   │   ├── CyanTooth.Core.csproj
 │   │   │
 │   │   ├── Models/                       # 数据模型
 │   │   │   ├── BluetoothDeviceInfo.cs
@@ -627,8 +627,8 @@ BluetoothManager/
 │   │       ├── DeviceStateChangedEvent.cs
 │   │       └── BatteryLevelChangedEvent.cs
 │   │
-│   └── BluetoothManager.Platform/        # 平台相关代码
-│       ├── BluetoothManager.Platform.csproj
+│   └── CyanTooth.Platform/        # 平台相关代码
+│       ├── CyanTooth.Platform.csproj
 │       │
 │       ├── Bluetooth/                    # 蓝牙 API 封装
 │       │   ├── DeviceDiscoverer.cs       # 设备发现
@@ -646,7 +646,7 @@ BluetoothManager/
 │           └── BluetoothApis.cs
 │
 ├── tests/
-│   └── BluetoothManager.Tests/
+│   └── CyanTooth.Tests/
 │
 └── docs/
     └── ARCHITECTURE.md                   # 本文档
@@ -655,7 +655,7 @@ BluetoothManager/
 ### 3.3 核心依赖
 
 ```xml
-<!-- BluetoothManager.csproj -->
+<!-- CyanTooth.csproj -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
@@ -678,7 +678,7 @@ BluetoothManager/
   </ItemGroup>
 </Project>
 
-<!-- BluetoothManager.Platform.csproj -->
+<!-- CyanTooth.Platform.csproj -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>

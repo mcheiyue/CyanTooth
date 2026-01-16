@@ -5,22 +5,22 @@
 ![WPF](https://img.shields.io/badge/UI-WPF-0078D6?logo=windows&logoColor=white)
 ![License](https://img.shields.io/badge/License-Apache--2.0-blue)
 
-CyanTooth 是一款专为 Windows 10/11 设计的现代化蓝牙音频设备管理工具。它旨在提供类似 **EarTrumpet** 风格的流畅交互体验，让您能够快速连接、断开和管理您的蓝牙音频设备，并实时监控设备电量。
+CyanTooth 是一款专为 Windows 10/11 设计的现代化蓝牙音频设备管理工具。
 
 ## 📸 预览
 
 > [!TIP]
 > 此处建议添加一张应用的主界面截图或托盘菜单截图，让用户直观感受 UI 设计。
 
-| 托盘菜单 (参考) | 主界面 (参考) |
+| 托盘菜单 | 主界面 |
 | :---: | :---: |
-| ![Placeholder](https://via.placeholder.com/300x450?text=Tray+Menu+Screenshot) | ![Placeholder](https://via.placeholder.com/600x400?text=Main+UI+Screenshot) |
+| ![Tray Menu](https://via.placeholder.com/300x450?text=CyanTooth+Tray+Menu) | ![Main UI](https://via.placeholder.com/600x400?text=CyanTooth+Main+UI) |
 
 ## 📦 下载
 
 您可以从 [Releases](https://github.com/yourusername/CyanTooth/releases) 页面下载最新的安装包。
-- `CyanTooth.exe`: 绿色版，直接运行。
-- `CyanTooth_Setup.exe`: 安装版，包含所有运行时。
+- `CyanTooth_SelfContained.exe`: 绿色版，直接运行（推荐）。
+- `CyanTooth_FrameworkDependent.exe`: 轻量版，需安装 .NET 8 运行库。
 
 ## ✨ 核心特性
 
@@ -37,9 +37,9 @@ CyanTooth 是一款专为 Windows 10/11 设计的现代化蓝牙音频设备管�
 
 | 层级 | 项目名称 | 描述 |
 |------|----------|------|
-| **UI 层** | `BluetoothManager` | 基于 WPF 的用户界面，负责交互与展示。 |
-| **核心层** | `BluetoothManager.Core` | 包含业务逻辑、数据模型、服务接口。 |
-| **平台层** | `BluetoothManager.Platform` | 封装底层 Windows API、蓝牙协议和音频控制。 |
+| **UI 层** | `CyanTooth` | 基于 WPF 的用户界面，负责交互与展示。 |
+| **核心层** | `CyanTooth.Core` | 包含业务逻辑、数据模型、服务接口。 |
+| **平台层** | `CyanTooth.Platform` | 封装底层 Windows API、蓝牙协议和音频控制。 |
 
 ### 主要技术栈
 
@@ -98,10 +98,10 @@ CyanTooth/
 
 CyanTooth 的诞生借鉴了许多优秀开源项目的思路：
 
-- [BluetoothDevicePairing](https://github.com/SuRHeal/BluetoothDevicePairing) - 设备发现与配对逻辑
-- [ToothTray](https://github.com/p18222/ToothTray) - IKsControl 音频连接实现
-- [BlueGauge](https://github.com/fsmv/BlueGauge) - BLE/BTC 电量读取逻辑
-- [Alternative-A2DP-Driver](https://github.com/j some/Alternative-A2DP-Driver) - 高级音频编解码器支持参考
+- [BluetoothDevicePairing](https://github.com/PolarGoose/BluetoothDevicePairing) - 设备发现与配对逻辑
+- [ToothTray](https://github.com/m2jean/ToothTray) - IKsControl 音频连接实现
+- [BlueGauge](https://github.com/iKineticate/BlueGauge) - BLE/BTC 电量读取逻辑
+- [Alternative-A2DP-Driver](https://github.com/Diablolend/Alternative-A2DP-Driver) - 高级音频编解码器支持参考
 
 ## 🤝 贡献指南
 

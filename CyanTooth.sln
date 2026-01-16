@@ -4,17 +4,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BluetoothManager", "src\BluetoothManager\BluetoothManager.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CyanTooth", "src\CyanTooth\CyanTooth.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BluetoothManager.Core", "src\BluetoothManager.Core\BluetoothManager.Core.csproj", "{B2C3D4E5-F6A7-8901-BCDE-F12345678901}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CyanTooth.Core", "src\CyanTooth.Core\CyanTooth.Core.csproj", "{B2C3D4E5-F6A7-8901-BCDE-F12345678901}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BluetoothManager.Platform", "src\BluetoothManager.Platform\BluetoothManager.Platform.csproj", "{C3D4E5F6-A7B8-9012-CDEF-123456789012}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CyanTooth.Platform", "src\CyanTooth.Platform\CyanTooth.Platform.csproj", "{C3D4E5F6-A7B8-9012-CDEF-123456789012}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D4E5F6A7-B8C9-0123-DEF0-234567890123}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{E5F6A7B8-C9D0-1234-EF01-345678901234}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BluetoothManager.Tests", "tests\BluetoothManager.Tests\BluetoothManager.Tests.csproj", "{F6A7B8C9-D0E1-2345-F012-456789012345}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CyanTooth.Tests", "tests\CyanTooth.Tests\CyanTooth.Tests.csproj", "{F6A7B8C9-D0E1-2345-F012-456789012345}"
 EndProject
 
 Global

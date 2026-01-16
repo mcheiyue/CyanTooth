@@ -74,11 +74,11 @@ jobs:
       run: |
         mkdir release-assets
         # 轻量版
-        copy .\publish\lightweight\win-x64\BluetoothManager.exe .\release-assets\CyanTooth-x64.exe
-        copy .\publish\lightweight\win-arm64\BluetoothManager.exe .\release-assets\CyanTooth-arm64.exe
+        copy .\publish\lightweight\win-x64\CyanTooth.exe .\release-assets\CyanTooth-x64.exe
+        copy .\publish\lightweight\win-arm64\CyanTooth.exe .\release-assets\CyanTooth-arm64.exe
         # 完整版
-        copy .\publish\standalone\win-x64\BluetoothManager.exe .\release-assets\CyanTooth-x64-standalone.exe
-        copy .\publish\standalone\win-arm64\BluetoothManager.exe .\release-assets\CyanTooth-arm64-standalone.exe
+        copy .\publish\standalone\win-x64\CyanTooth.exe .\release-assets\CyanTooth-x64-standalone.exe
+        copy .\publish\standalone\win-arm64\CyanTooth.exe .\release-assets\CyanTooth-arm64-standalone.exe
       shell: cmd
     
     # 4. 创建 GitHub Release

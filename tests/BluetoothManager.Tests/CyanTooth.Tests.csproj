@@ -19,8 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\BluetoothManager.Core\BluetoothManager.Core.csproj" />
-    <ProjectReference Include="..\..\src\BluetoothManager.Platform\BluetoothManager.Platform.csproj" />
+    <ProjectReference Include="..\..\src\CyanTooth.Core\CyanTooth.Core.csproj" />
+    <ProjectReference Include="..\..\src\CyanTooth.Platform\CyanTooth.Platform.csproj" />
   </ItemGroup>
 
 </Project>
