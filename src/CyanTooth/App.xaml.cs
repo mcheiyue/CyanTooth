@@ -26,36 +26,32 @@ public partial class App : System.Windows.Application
 
     public App()
     {
-        // 第一步：立即挂载异常处理器，不执行任何逻辑
+        // 关键调试：如果在极早期崩溃，显示消息框
+        // MessageBox.Show("CyanTooth 正在进入构造函数...", "Debug", MessageBoxButton.OK, MessageBoxImage.Information);
+
+        // 第一步：立即挂载异常处理器
         AppDomain.CurrentDomain.UnhandledException += (s, e) =>
         {
             var ex = e.ExceptionObject as Exception;
-            HandleFatalException(ex, "UnhandledException");
+            HandleFatalException(ex, "AppDomain");
         };
         
         DispatcherUnhandledException += (s, e) =>
         {
-            HandleFatalException(e.Exception, "DispatcherUnhandledException");
+            HandleFatalException(e.Exception, "Dispatcher");
             e.Handled = true;
         };
-        
-        TaskScheduler.UnobservedTaskException += (s, e) =>
-        {
-            DebugLogger.LogError("[UnobservedTaskException] 异步任务错误", e.Exception);
-            e.SetObserved();
-        };
 
-        // 第二步：初始化日志系统
+        // 第二步：显式初始化日志
         DebugLogger.Initialize();
-        DebugLogger.Log("App 构造函数开始执行");
+        DebugLogger.Log("==== App Instance Created ====");
 
         try
         {
-            DebugLogger.Log("正在构建 Host...");
+            DebugLogger.Log("开始配置依赖注入...");
             _host = Host.CreateDefaultBuilder()
                 .ConfigureServices((context, services) =>
                 {
-                    DebugLogger.Log("正在配置服务依赖注入...");
                     services.AddSingleton<ConfigService>();
                     services.AddSingleton<BluetoothService>();
                     services.AddSingleton<NotificationService>();
@@ -64,11 +60,11 @@ public partial class App : System.Windows.Application
                     services.AddSingleton<TrayIconViewModel>();
                 })
                 .Build();
-            DebugLogger.Log("Host 构建完成");
+            DebugLogger.Log("DI 容器构建完成");
         }
         catch (Exception ex)
         {
-            HandleFatalException(ex, "Host构建阶段");
+            HandleFatalException(ex, "HostBuilder");
             throw;
         }
     }

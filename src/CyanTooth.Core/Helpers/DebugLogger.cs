@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Windows;
+using System.Diagnostics;
 
 namespace CyanTooth.Core.Helpers;
 
@@ -31,13 +32,19 @@ public static class DebugLogger
 
             try
             {
-                // 获取 LocalAppData 绝对路径
+                // 1. 尝试获取 LocalAppData 绝对路径
                 string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
                 
-                // 如果系统路径获取失败，强制报错，绝不使用相对路径
+                // 2. 如果系统路径获取失败，尝试用户 Profile 路径
                 if (string.IsNullOrEmpty(localAppData))
                 {
-                    throw new InvalidOperationException("无法获取系统的 LocalApplicationData 路径。");
+                    localAppData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "AppData", "Local");
+                }
+
+                // 3. 最终退避：系统临时目录 (绝对路径)
+                if (string.IsNullOrEmpty(localAppData) || !Directory.Exists(Path.GetDirectoryName(localAppData) ?? "C:\\"))
+                {
+                    localAppData = Path.GetTempPath();
                 }
 
                 _logDirectory = Path.Combine(localAppData, "CyanTooth", "logs");
@@ -47,23 +54,27 @@ public static class DebugLogger
                     Directory.CreateDirectory(_logDirectory);
                 }
 
-                _logPath = Path.Combine(_logDirectory, "debug.log");
+                // 使用唯一的日志文件名，避免与系统自带的 debug.log 混淆
+                _logPath = Path.Combine(_logDirectory, "cyantooth_runtime_v5.log");
                 
-                // 写入明确的启动绝对路径标记
-                File.AppendAllText(_logPath, $"{Environment.NewLine}>>>> [{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [SYSTEM_BOOT] 日志流已重定向至: {_logPath}{Environment.NewLine}");
+                // 写入启动标记，使用绝对路径
+                File.AppendAllText(_logPath, $"{Environment.NewLine}=================================================={Environment.NewLine}");
+                File.AppendAllText(_logPath, $">>>> [{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [SYSTEM_BOOT] 日志重定向成功{Environment.NewLine}");
+                File.AppendAllText(_logPath, $">>>> 进程 ID: {Environment.ProcessId}{Environment.NewLine}");
+                File.AppendAllText(_logPath, $">>>> 运行目录: {AppDomain.CurrentDomain.BaseDirectory}{Environment.NewLine}");
+                File.AppendAllText(_logPath, $"=================================================={Environment.NewLine}");
             }
             catch (Exception ex)
             {
-                // 如果 LocalAppData 写入失败，最后的退避方案是 Temp 目录（绝对路径）
+                // 最后的防线：尝试直接写入 Temp 目录下的紧急文件
                 try
                 {
-                    string tempPath = Path.GetTempPath();
-                    _logPath = Path.Combine(tempPath, "cyantooth_emergency.log");
-                    File.AppendAllText(_logPath, $"[CRITICAL_FAILURE] 无法写入系统应用目录，回退至临时目录。错误: {ex.Message}{Environment.NewLine}");
+                    string emergencyPath = Path.Combine(Path.GetTempPath(), "cyantooth_critical_err.log");
+                    File.AppendAllText(emergencyPath, $"[{DateTime.Now}] 初始化失败: {ex}{Environment.NewLine}");
+                    _logPath = emergencyPath;
                 }
                 catch
                 {
-                    // 如果连 Temp 都写不了，说明环境极度受限
                     _logPath = null;
                 }
             }
@@ -72,6 +83,7 @@ public static class DebugLogger
 
     public static void Log(string message, string level = "INFO")
     {
+        if (_logPath == null) Initialize();
         if (_logPath == null) return;
 
         try
@@ -87,7 +99,7 @@ public static class DebugLogger
 
     public static void LogError(string message, Exception? ex = null)
     {
-        string fullMessage = ex != null ? $"{message}{Environment.NewLine}堆栈信息: {ex}" : message;
+        string fullMessage = ex != null ? $"{message}{Environment.NewLine}异常详情: {ex}" : message;
         Log(fullMessage, "ERROR");
     }
 
