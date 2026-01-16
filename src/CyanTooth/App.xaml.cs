@@ -25,67 +25,100 @@ public partial class App : System.Windows.Application
 
     public App()
     {
+        DebugLogger.Log("App 构造函数开始执行");
         // Global exception handlers
         AppDomain.CurrentDomain.UnhandledException += (s, e) =>
         {
             var ex = e.ExceptionObject as Exception;
-            DebugLogger.LogError("[UnhandledException]", ex);
+            DebugLogger.LogError("[UnhandledException] 致命错误", ex);
             System.Windows.MessageBox.Show($"致命错误:\n{ex?.Message}\n\n请在 AppData 目录中查看日志获取详细信息。", "程序崩溃", MessageBoxButton.OK, MessageBoxImage.Error);
         };
         
         DispatcherUnhandledException += (s, e) =>
         {
-            DebugLogger.LogError("[DispatcherUnhandledException]", e.Exception);
+            DebugLogger.LogError("[DispatcherUnhandledException] UI 线程错误", e.Exception);
             System.Windows.MessageBox.Show($"UI 错误:\n{e.Exception.Message}\n\n请在 AppData 目录中查看日志获取详细信息。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
             e.Handled = true;
         };
         
         TaskScheduler.UnobservedTaskException += (s, e) =>
         {
-            DebugLogger.LogError("[UnobservedTaskException]", e.Exception);
+            DebugLogger.LogError("[UnobservedTaskException] 异步任务错误", e.Exception);
             e.SetObserved();
         };
 
-        _host = Host.CreateDefaultBuilder()
-            .ConfigureServices((context, services) =>
-            {
-                // Core Services
-                services.AddSingleton<ConfigService>();
-                services.AddSingleton<BluetoothService>();
-                services.AddSingleton<NotificationService>();
+        try
+        {
+            DebugLogger.Log("正在构建 Host...");
+            _host = Host.CreateDefaultBuilder()
+                .ConfigureServices((context, services) =>
+                {
+                    DebugLogger.Log("正在配置服务依赖注入...");
+                    // Core Services
+                    services.AddSingleton<ConfigService>();
+                    services.AddSingleton<BluetoothService>();
+                    services.AddSingleton<NotificationService>();
 
-                // ViewModels
-                services.AddSingleton<MainViewModel>();
-                services.AddTransient<SettingsViewModel>();
-                services.AddSingleton<TrayIconViewModel>();
-            })
-            .Build();
+                    // ViewModels
+                    services.AddSingleton<MainViewModel>();
+                    services.AddTransient<SettingsViewModel>();
+                    services.AddSingleton<TrayIconViewModel>();
+                })
+                .Build();
+            DebugLogger.Log("Host 构建完成");
+        }
+        catch (Exception ex)
+        {
+            DebugLogger.LogError("Host 构建失败", ex);
+            throw;
+        }
     }
 
     protected override async void OnStartup(StartupEventArgs e)
     {
-        await _host.StartAsync();
-        base.OnStartup(e);
-
-        // Apply theme based on settings
-        var configService = Services.GetRequiredService<ConfigService>();
-        ApplyTheme(configService.Settings.Theme);
-
-        // Initialize Bluetooth service
-        var bluetoothService = Services.GetRequiredService<BluetoothService>();
-        var mainViewModel = Services.GetRequiredService<MainViewModel>();
-        mainViewModel.Initialize();
-
-        // Create tray icon
-        CreateTrayIcon();
-
-        // Check if started with --minimized flag
-        bool startMinimized = e.Args.Contains("--minimized") || configService.Settings.StartMinimized;
-
-        if (!startMinimized)
+        DebugLogger.Log("OnStartup 开始执行");
+        try
         {
-            // Show the flyout window on first start
-            ShowFlyout();
+            DebugLogger.Log("正在启动 Host...");
+            await _host.StartAsync();
+            DebugLogger.Log("Host 已启动");
+
+            base.OnStartup(e);
+
+            // Apply theme based on settings
+            DebugLogger.Log("正在获取配置并应用主题...");
+            var configService = Services.GetRequiredService<ConfigService>();
+            ApplyTheme(configService.Settings.Theme);
+
+            // Initialize Bluetooth service
+            DebugLogger.Log("正在初始化蓝牙服务...");
+            var bluetoothService = Services.GetRequiredService<BluetoothService>();
+            var mainViewModel = Services.GetRequiredService<MainViewModel>();
+            mainViewModel.Initialize();
+            DebugLogger.Log("蓝牙服务初始化完成");
+
+            // Create tray icon
+            DebugLogger.Log("正在创建托盘图标...");
+            CreateTrayIcon();
+            DebugLogger.Log("托盘图标创建完成");
+
+            // Check if started with --minimized flag
+            bool startMinimized = e.Args.Contains("--minimized") || configService.Settings.StartMinimized;
+            DebugLogger.Log($"启动模式: {(startMinimized ? "最小化" : "标准")}");
+
+            if (!startMinimized)
+            {
+                DebugLogger.Log("正在显示主界面 (Flyout)...");
+                ShowFlyout();
+            }
+            
+            DebugLogger.Log("OnStartup 执行完毕，程序进入空闲循环");
+        }
+        catch (Exception ex)
+        {
+            DebugLogger.LogError("启动过程中发生异常", ex);
+            System.Windows.MessageBox.Show($"启动失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            Shutdown();
         }
     }
 

@@ -18,8 +18,8 @@ public static class DebugLogger
     {
         try
         {
-            // 将日志存储在 %AppData%\CyanTooth\logs 目录下
-            string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            // 强制统一使用 LocalApplicationData
+            string appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             _logDirectory = Path.Combine(appData, "CyanTooth", "logs");
             
             if (!Directory.Exists(_logDirectory))
@@ -28,11 +28,16 @@ public static class DebugLogger
             }
 
             _logPath = Path.Combine(_logDirectory, "debug.log");
+            
+            // 启动时立即尝试写入，不留空白期
+            File.AppendAllText(_logPath, $"{Environment.NewLine}>>>> [{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [STARTUP] CyanTooth 启动初始化...{Environment.NewLine}");
+            Log("日志引擎准备就绪。");
         }
-        catch
+        catch (Exception ex)
         {
-            // 如果无法创建目录，回退到当前目录
-            _logPath = "debug.log";
+            // 最后的防线
+            _logPath = "debug_fallback.log";
+            try { File.AppendAllText(_logPath, $"日志初始化失败: {ex.Message}"); } catch { }
         }
     }
 
