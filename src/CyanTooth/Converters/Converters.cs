@@ -1,3 +1,4 @@
+using CyanTooth.Platform.Helpers;
 using System;
 using System.Globalization;
 using System.Windows;

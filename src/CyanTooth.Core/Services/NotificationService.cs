@@ -1,3 +1,4 @@
+using CyanTooth.Platform.Helpers;
 using Windows.UI.Notifications;
 using Windows.Data.Xml.Dom;
 using CyanTooth.Core.Events;

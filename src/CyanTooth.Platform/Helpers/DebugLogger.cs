@@ -1,3 +1,4 @@
+using CyanTooth.Platform.Helpers;
 using System;
 using System.IO;
 using System.Windows;
@@ -55,9 +56,9 @@ public static class DebugLogger
                 }
 
                 // 使用唯一的日志文件名，避免与系统自带的 debug.log 混淆
-                _logPath = Path.Combine(_logDirectory, "cyantooth_runtime_v5.log");
+                _logPath = Path.Combine(_logDirectory, "cyantooth_runtime.log");
                 
-                // 写入启动标记，使用绝对路径
+                // 写入启动标记
                 File.AppendAllText(_logPath, $"{Environment.NewLine}=================================================={Environment.NewLine}");
                 File.AppendAllText(_logPath, $">>>> [{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [SYSTEM_BOOT] 日志重定向成功{Environment.NewLine}");
                 File.AppendAllText(_logPath, $">>>> 进程 ID: {Environment.ProcessId}{Environment.NewLine}");
@@ -66,7 +67,6 @@ public static class DebugLogger
             }
             catch (Exception ex)
             {
-                // 最后的防线：尝试直接写入 Temp 目录下的紧急文件
                 try
                 {
                     string emergencyPath = Path.Combine(Path.GetTempPath(), "cyantooth_critical_err.log");
@@ -94,7 +94,7 @@ public static class DebugLogger
                 File.AppendAllText(_logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{level.ToUpper()}] {message}{Environment.NewLine}");
             }
         }
-        catch { /* 忽略写入错误 */ }
+        catch { }
     }
 
     public static void LogError(string message, Exception? ex = null)

@@ -1,3 +1,4 @@
+using CyanTooth.Platform.Helpers;
 using System.Runtime.InteropServices;
 using CyanTooth.Platform.Native;
 using Vanara.PInvoke;
@@ -34,7 +35,7 @@ public class AudioEndpointEnumerator : IDisposable
             if (collection == null) return _endpoints;
             
             uint count = collection.GetCount();
-            CyanTooth.Platform.Helpers.DebugLogger.Log($"GetBluetoothAudioEndpoints: total audio endpoints={count}");
+            DebugLogger.Log($"GetBluetoothAudioEndpoints: total audio endpoints={count}");
 
             for (uint i = 0; i < count; i++)
             {
@@ -84,7 +85,7 @@ public class AudioEndpointEnumerator : IDisposable
                                 continue;
                             }
 
-                            CyanTooth.Platform.Helpers.DebugLogger.Log($"GetBluetoothAudioEndpoints: found BT device, connectedDeviceId={connectedDeviceId}");
+                            DebugLogger.Log($"GetBluetoothAudioEndpoints: found BT device, connectedDeviceId={connectedDeviceId}");
 
                             // Get the connected device and activate IKsControl on it
                             var connectedDevice = _deviceEnumerator.GetDevice(connectedDeviceId);
@@ -97,7 +98,7 @@ public class AudioEndpointEnumerator : IDisposable
                                 }
                                 catch (Exception ex)
                                 {
-                                    CyanTooth.Platform.Helpers.DebugLogger.Log($"GetBluetoothAudioEndpoints: failed to activate IKsControl: {ex.Message}");
+                                    DebugLogger.Log($"GetBluetoothAudioEndpoints: failed to activate IKsControl: {ex.Message}");
                                 }
                             }
 
@@ -141,26 +142,26 @@ public class AudioEndpointEnumerator : IDisposable
                             };
 
                             _endpoints.Add(endpointInfo);
-                            CyanTooth.Platform.Helpers.DebugLogger.Log($"GetBluetoothAudioEndpoints: added endpoint Name={friendlyName}, HasKsControl={ksControl != null}");
+                            DebugLogger.Log($"GetBluetoothAudioEndpoints: added endpoint Name={friendlyName}, HasKsControl={ksControl != null}");
                         }
                         catch (Exception ex)
                         {
-                            CyanTooth.Platform.Helpers.DebugLogger.Log($"GetBluetoothAudioEndpoints: connector error: {ex.Message}");
+                            DebugLogger.Log($"GetBluetoothAudioEndpoints: connector error: {ex.Message}");
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    CyanTooth.Platform.Helpers.DebugLogger.Log($"GetBluetoothAudioEndpoints: device error: {ex.Message}");
+                    DebugLogger.Log($"GetBluetoothAudioEndpoints: device error: {ex.Message}");
                 }
             }
         }
         catch (COMException ex)
         {
-            CyanTooth.Platform.Helpers.DebugLogger.Log($"GetBluetoothAudioEndpoints: COM error: {ex.Message}");
+            DebugLogger.Log($"GetBluetoothAudioEndpoints: COM error: {ex.Message}");
         }
 
-        CyanTooth.Platform.Helpers.DebugLogger.Log($"GetBluetoothAudioEndpoints: returning {_endpoints.Count} endpoints");
+        DebugLogger.Log($"GetBluetoothAudioEndpoints: returning {_endpoints.Count} endpoints");
         return _endpoints;
     }
 
@@ -188,15 +189,15 @@ public class AudioEndpointEnumerator : IDisposable
         // Format MAC as uppercase hex without separators (e.g., "9505BB2CF7F4")
         string macHex = macAddress.ToString("X12");
         
-        CyanTooth.Platform.Helpers.DebugLogger.Log($"FindEndpointsByMacAddress: looking for MAC={macHex}, DeviceName={deviceName ?? "null"}");
+        DebugLogger.Log($"FindEndpointsByMacAddress: looking for MAC={macHex}, DeviceName={deviceName ?? "null"}");
         
         var endpoints = GetBluetoothAudioEndpoints();
         
-        CyanTooth.Platform.Helpers.DebugLogger.Log($"FindEndpointsByMacAddress: found {endpoints.Count} BT endpoints total");
+        DebugLogger.Log($"FindEndpointsByMacAddress: found {endpoints.Count} BT endpoints total");
         
         foreach (var ep in endpoints)
         {
-            CyanTooth.Platform.Helpers.DebugLogger.Log($"FindEndpointsByMacAddress: endpoint Name={ep.FriendlyName}, ConnectedDeviceId={ep.ConnectedDeviceId ?? "null"}");
+            DebugLogger.Log($"FindEndpointsByMacAddress: endpoint Name={ep.FriendlyName}, ConnectedDeviceId={ep.ConnectedDeviceId ?? "null"}");
         }
         
         // Match using ConnectedDeviceId which contains the MAC address
@@ -205,7 +206,7 @@ public class AudioEndpointEnumerator : IDisposable
             e.ConnectedDeviceId != null && 
             e.ConnectedDeviceId.Contains(macHex, StringComparison.OrdinalIgnoreCase)).ToList();
             
-        CyanTooth.Platform.Helpers.DebugLogger.Log($"FindEndpointsByMacAddress: {matchedByMac.Count} matched by MAC");
+        DebugLogger.Log($"FindEndpointsByMacAddress: {matchedByMac.Count} matched by MAC");
         
         // Also match Hands-Free endpoints by device name
         // HFP endpoints are named like "耳机 (Device Name Hands-Free AG Audio)" or "Device Name Hands-Free AG Audio"
@@ -216,12 +217,12 @@ public class AudioEndpointEnumerator : IDisposable
                 e.FriendlyName.Contains("Hands-Free", StringComparison.OrdinalIgnoreCase) &&
                 e.FriendlyName.Contains(deviceName, StringComparison.OrdinalIgnoreCase)).ToList();
                 
-            CyanTooth.Platform.Helpers.DebugLogger.Log($"FindEndpointsByMacAddress: {matchedByName.Count} additional Hands-Free matched by name");
+            DebugLogger.Log($"FindEndpointsByMacAddress: {matchedByName.Count} additional Hands-Free matched by name");
             
             matchedByMac.AddRange(matchedByName);
         }
         
-        CyanTooth.Platform.Helpers.DebugLogger.Log($"FindEndpointsByMacAddress: {matchedByMac.Count} total matched");
+        DebugLogger.Log($"FindEndpointsByMacAddress: {matchedByMac.Count} total matched");
         
         return matchedByMac;
     }

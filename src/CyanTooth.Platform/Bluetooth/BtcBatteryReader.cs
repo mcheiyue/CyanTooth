@@ -1,3 +1,4 @@
+using CyanTooth.Platform.Helpers;
 using System.Runtime.InteropServices;
 using CyanTooth.Platform.Native;
 
@@ -19,7 +20,7 @@ public class BtcBatteryReader
     /// <returns>Battery level (0-100) or null if unavailable</returns>
     public byte? ReadBatteryLevel(string instanceId)
     {
-        CyanTooth.Platform.Helpers.DebugLogger.Log($" BtcBatteryReader.ReadBatteryLevel: instanceId={instanceId}");
+        DebugLogger.Log($" BtcBatteryReader.ReadBatteryLevel: instanceId={instanceId}");
         try
         {
             // Locate the device node
@@ -28,7 +29,7 @@ public class BtcBatteryReader
                 instanceId,
                 CfgMgr32.CM_LOCATE_DEVNODE_NORMAL);
 
-            CyanTooth.Platform.Helpers.DebugLogger.Log($" BtcBatteryReader: CM_Locate_DevNodeW(NORMAL) result={result}");
+            DebugLogger.Log($" BtcBatteryReader: CM_Locate_DevNodeW(NORMAL) result={result}");
 
             if (result != CfgMgr32.CR_SUCCESS)
             {
@@ -38,7 +39,7 @@ public class BtcBatteryReader
                     instanceId,
                     CfgMgr32.CM_LOCATE_DEVNODE_PHANTOM);
 
-                CyanTooth.Platform.Helpers.DebugLogger.Log($" BtcBatteryReader: CM_Locate_DevNodeW(PHANTOM) result={result}");
+                DebugLogger.Log($" BtcBatteryReader: CM_Locate_DevNodeW(PHANTOM) result={result}");
 
                 if (result != CfgMgr32.CR_SUCCESS)
                 {
@@ -47,12 +48,12 @@ public class BtcBatteryReader
             }
 
             var batteryLevel = ReadBatteryLevelFromDevNode(devInst);
-            CyanTooth.Platform.Helpers.DebugLogger.Log($" BtcBatteryReader: ReadBatteryLevelFromDevNode result={batteryLevel?.ToString() ?? "null"}");
+            DebugLogger.Log($" BtcBatteryReader: ReadBatteryLevelFromDevNode result={batteryLevel?.ToString() ?? "null"}");
             return batteryLevel;
         }
         catch (Exception ex)
         {
-            CyanTooth.Platform.Helpers.DebugLogger.Log($" BtcBatteryReader: Exception={ex.Message}");
+            DebugLogger.Log($" BtcBatteryReader: Exception={ex.Message}");
             return null;
         }
     }
@@ -66,7 +67,7 @@ public class BtcBatteryReader
     /// <returns>Battery level (0-100) or null if unavailable</returns>
     public byte? ReadBatteryLevelByMac(ulong macAddress)
     {
-        CyanTooth.Platform.Helpers.DebugLogger.Log($"BtcBatteryReader.ReadBatteryLevelByMac: MAC={macAddress:X12}");
+        DebugLogger.Log($"BtcBatteryReader.ReadBatteryLevelByMac: MAC={macAddress:X12}");
 
         // Use GUID_DEVCLASS_SYSTEM to enumerate devices (like BlueGauge does)
         var classGuid = CfgMgr32.GUID_DEVCLASS_SYSTEM;
@@ -78,7 +79,7 @@ public class BtcBatteryReader
 
         if (deviceInfoSet == SetupApi.INVALID_HANDLE_VALUE)
         {
-            CyanTooth.Platform.Helpers.DebugLogger.Log($"BtcBatteryReader: SetupDiGetClassDevsW failed, error={Marshal.GetLastWin32Error()}");
+            DebugLogger.Log($"BtcBatteryReader: SetupDiGetClassDevsW failed, error={Marshal.GetLastWin32Error()}");
             return null;
         }
 
@@ -119,11 +120,11 @@ public class BtcBatteryReader
                 // Read device address to match
                 var deviceAddress = TryReadDeviceAddress(deviceInfoSet, ref deviceInfoData);
                 
-                CyanTooth.Platform.Helpers.DebugLogger.Log($"BtcBatteryReader: found device InstanceId={instanceId}, Address={deviceAddress:X12}, Battery={batteryLevel}");
+                DebugLogger.Log($"BtcBatteryReader: found device InstanceId={instanceId}, Address={deviceAddress:X12}, Battery={batteryLevel}");
 
                 if (deviceAddress == macAddress)
                 {
-                    CyanTooth.Platform.Helpers.DebugLogger.Log($"BtcBatteryReader: MATCH! Returning battery={batteryLevel}");
+                    DebugLogger.Log($"BtcBatteryReader: MATCH! Returning battery={batteryLevel}");
                     return batteryLevel;
                 }
 
@@ -131,7 +132,7 @@ public class BtcBatteryReader
                 deviceInfoData.cbSize = (uint)Marshal.SizeOf<SetupApi.SP_DEVINFO_DATA>();
             }
 
-            CyanTooth.Platform.Helpers.DebugLogger.Log($"BtcBatteryReader: enumerated {btDeviceCount} BTHENUM devices, no match for {macAddress:X12}");
+            DebugLogger.Log($"BtcBatteryReader: enumerated {btDeviceCount} BTHENUM devices, no match for {macAddress:X12}");
             return null;
         }
         finally
@@ -218,7 +219,7 @@ public class BtcBatteryReader
             return batteryLevel;
         
         // If not found, try child devices
-        CyanTooth.Platform.Helpers.DebugLogger.Log($" BtcBatteryReader: trying child devices");
+        DebugLogger.Log($" BtcBatteryReader: trying child devices");
         
         uint childDevInst = 0;
         var result = CfgMgr32.CM_Get_Child(out childDevInst, devInst, 0);
@@ -228,7 +229,7 @@ public class BtcBatteryReader
             batteryLevel = TryReadBatteryProperty(childDevInst);
             if (batteryLevel.HasValue)
             {
-                CyanTooth.Platform.Helpers.DebugLogger.Log($" BtcBatteryReader: found battery in child device: {batteryLevel}");
+                DebugLogger.Log($" BtcBatteryReader: found battery in child device: {batteryLevel}");
                 return batteryLevel;
             }
             
@@ -276,7 +277,7 @@ public class BtcBatteryReader
 
     private byte? FindAndReadBatteryLevel(string instanceIdPattern)
     {
-        CyanTooth.Platform.Helpers.DebugLogger.Log($" BtcBatteryReader.FindAndReadBatteryLevel: pattern={instanceIdPattern}");
+        DebugLogger.Log($" BtcBatteryReader.FindAndReadBatteryLevel: pattern={instanceIdPattern}");
         
         // Use SetupAPI to enumerate all Bluetooth devices and find matching one
         var deviceInfoSet = SetupApi.SetupDiGetClassDevsW(
@@ -287,7 +288,7 @@ public class BtcBatteryReader
 
         if (deviceInfoSet == SetupApi.INVALID_HANDLE_VALUE)
         {
-            CyanTooth.Platform.Helpers.DebugLogger.Log($" BtcBatteryReader: SetupDiGetClassDevsW returned INVALID_HANDLE, error={Marshal.GetLastWin32Error()}");
+            DebugLogger.Log($" BtcBatteryReader: SetupDiGetClassDevsW returned INVALID_HANDLE, error={Marshal.GetLastWin32Error()}");
             return null;
         }
 
@@ -316,7 +317,7 @@ public class BtcBatteryReader
                         // Check if this matches our pattern (case-insensitive)
                         if (instanceId.StartsWith(instanceIdPattern, StringComparison.OrdinalIgnoreCase))
                         {
-                            CyanTooth.Platform.Helpers.DebugLogger.Log($" BtcBatteryReader: MATCH found: {instanceId}");
+                            DebugLogger.Log($" BtcBatteryReader: MATCH found: {instanceId}");
                             // Try to read battery level from this device
                             var batteryLevel = ReadBatteryLevelFromDevNode(deviceInfoData.DevInst);
                             if (batteryLevel.HasValue)
@@ -329,7 +330,7 @@ public class BtcBatteryReader
                 deviceInfoData.cbSize = (uint)Marshal.SizeOf<SetupApi.SP_DEVINFO_DATA>();
             }
 
-            CyanTooth.Platform.Helpers.DebugLogger.Log($" BtcBatteryReader: enumerated {foundCount} BTHENUM devices, no match");
+            DebugLogger.Log($" BtcBatteryReader: enumerated {foundCount} BTHENUM devices, no match");
             return null;
         }
         finally

@@ -1,3 +1,4 @@
+using CyanTooth.Platform.Helpers;
 using System.Collections.Concurrent;
 using CyanTooth.Core.Events;
 using CyanTooth.Core.Models;
@@ -105,26 +106,26 @@ public class BluetoothService : IDisposable
     {
         return await Task.Run(() =>
         {
-            CyanTooth.Platform.Helpers.DebugLogger.Log($" ConnectAsync: deviceId={deviceId}");
+            DebugLogger.Log($" ConnectAsync: deviceId={deviceId}");
             
             if (!_devices.TryGetValue(deviceId, out var device))
             {
-                CyanTooth.Platform.Helpers.DebugLogger.Log($" ConnectAsync: device not found in _devices");
+                DebugLogger.Log($" ConnectAsync: device not found in _devices");
                 return false;
             }
 
-            CyanTooth.Platform.Helpers.DebugLogger.Log($" ConnectAsync: device={device.Name}, Address={device.Address:X12}");
+            DebugLogger.Log($" ConnectAsync: device={device.Name}, Address={device.Address:X12}");
 
             // Method 1: Try KsControl (primary method, fast and reliable)
             var endpoints = _audioEnumerator.FindEndpointsByMacAddress(device.Address, device.Name);
-            CyanTooth.Platform.Helpers.DebugLogger.Log($" ConnectAsync: trying KsControl, found {endpoints.Count()} endpoints by MAC/Name");
+            DebugLogger.Log($" ConnectAsync: trying KsControl, found {endpoints.Count()} endpoints by MAC/Name");
             
             foreach (var endpoint in endpoints)
             {
-                CyanTooth.Platform.Helpers.DebugLogger.Log($" ConnectAsync: trying endpoint DeviceId={endpoint.DeviceId}, HasKsControl={endpoint.KsControl != null}");
+                DebugLogger.Log($" ConnectAsync: trying endpoint DeviceId={endpoint.DeviceId}, HasKsControl={endpoint.KsControl != null}");
                 if (_audioConnector.Connect(endpoint))
                 {
-                    CyanTooth.Platform.Helpers.DebugLogger.Log($" ConnectAsync: SUCCESS via KsControl");
+                    DebugLogger.Log($" ConnectAsync: SUCCESS via KsControl");
                     return true;
                 }
             }
@@ -132,16 +133,16 @@ public class BluetoothService : IDisposable
             // Method 2: Try using the container ID
             if (device.ContainerId.HasValue)
             {
-                CyanTooth.Platform.Helpers.DebugLogger.Log($" ConnectAsync: trying ContainerId={device.ContainerId.Value}");
+                DebugLogger.Log($" ConnectAsync: trying ContainerId={device.ContainerId.Value}");
                 var endpoint = _audioEnumerator.FindEndpointByContainerId(device.ContainerId.Value);
                 if (endpoint != null)
                 {
-                    CyanTooth.Platform.Helpers.DebugLogger.Log($" ConnectAsync: found endpoint by ContainerId, HasKsControl={endpoint.KsControl != null}");
+                    DebugLogger.Log($" ConnectAsync: found endpoint by ContainerId, HasKsControl={endpoint.KsControl != null}");
                     return _audioConnector.Connect(endpoint);
                 }
             }
 
-            CyanTooth.Platform.Helpers.DebugLogger.Log($" ConnectAsync: FAILED - no valid endpoint found");
+            DebugLogger.Log($" ConnectAsync: FAILED - no valid endpoint found");
             return false;
         });
     }
@@ -153,27 +154,27 @@ public class BluetoothService : IDisposable
     {
         return await Task.Run(() =>
         {
-            CyanTooth.Platform.Helpers.DebugLogger.Log($" DisconnectAsync: deviceId={deviceId}");
+            DebugLogger.Log($" DisconnectAsync: deviceId={deviceId}");
             
             if (!_devices.TryGetValue(deviceId, out var device))
             {
-                CyanTooth.Platform.Helpers.DebugLogger.Log($" DisconnectAsync: device not found");
+                DebugLogger.Log($" DisconnectAsync: device not found");
                 return false;
             }
 
-            CyanTooth.Platform.Helpers.DebugLogger.Log($" DisconnectAsync: device={device.Name}, Address={device.Address:X12}");
+            DebugLogger.Log($" DisconnectAsync: device={device.Name}, Address={device.Address:X12}");
 
             // Method 1: Try KsControl on ALL endpoints (like ToothTray does)
             var endpoints = _audioEnumerator.FindEndpointsByMacAddress(device.Address, device.Name).ToList();
-            CyanTooth.Platform.Helpers.DebugLogger.Log($" DisconnectAsync: trying KsControl, found {endpoints.Count} endpoints");
+            DebugLogger.Log($" DisconnectAsync: trying KsControl, found {endpoints.Count} endpoints");
             
             bool anySuccess = false;
             foreach (var endpoint in endpoints)
             {
-                CyanTooth.Platform.Helpers.DebugLogger.Log($" DisconnectAsync: trying endpoint DeviceId={endpoint.DeviceId}, HasKsControl={endpoint.KsControl != null}");
+                DebugLogger.Log($" DisconnectAsync: trying endpoint DeviceId={endpoint.DeviceId}, HasKsControl={endpoint.KsControl != null}");
                 if (_audioConnector.Disconnect(endpoint))
                 {
-                    CyanTooth.Platform.Helpers.DebugLogger.Log($" DisconnectAsync: endpoint disconnected successfully");
+                    DebugLogger.Log($" DisconnectAsync: endpoint disconnected successfully");
                     anySuccess = true;
                 }
             }
@@ -181,7 +182,7 @@ public class BluetoothService : IDisposable
             // Method 2: Also try using the container ID if we haven't succeeded yet
             if (!anySuccess && device.ContainerId.HasValue)
             {
-                CyanTooth.Platform.Helpers.DebugLogger.Log($" DisconnectAsync: trying ContainerId={device.ContainerId.Value}");
+                DebugLogger.Log($" DisconnectAsync: trying ContainerId={device.ContainerId.Value}");
                 var endpoint = _audioEnumerator.FindEndpointByContainerId(device.ContainerId.Value);
                 if (endpoint != null)
                 {
@@ -192,7 +193,7 @@ public class BluetoothService : IDisposable
                 }
             }
 
-            CyanTooth.Platform.Helpers.DebugLogger.Log($" DisconnectAsync: {(anySuccess ? "SUCCESS" : "FAILED")}");
+            DebugLogger.Log($" DisconnectAsync: {(anySuccess ? "SUCCESS" : "FAILED")}");
             return anySuccess;
         });
     }
@@ -202,48 +203,48 @@ public class BluetoothService : IDisposable
     /// </summary>
     public async Task<byte?> ReadBatteryLevelAsync(string deviceId)
     {
-        CyanTooth.Platform.Helpers.DebugLogger.Log($" ReadBatteryLevelAsync: deviceId={deviceId}");
+        DebugLogger.Log($" ReadBatteryLevelAsync: deviceId={deviceId}");
         
         if (!_devices.TryGetValue(deviceId, out var device))
         {
-            CyanTooth.Platform.Helpers.DebugLogger.Log($" ReadBatteryLevelAsync: device not found");
+            DebugLogger.Log($" ReadBatteryLevelAsync: device not found");
             return null;
         }
 
-        CyanTooth.Platform.Helpers.DebugLogger.Log($" ReadBatteryLevelAsync: device={device.Name}, Type={device.DeviceType}, InstanceId={device.InstanceId ?? "null"}, Address={device.Address:X12}");
+        DebugLogger.Log($" ReadBatteryLevelAsync: device={device.Name}, Type={device.DeviceType}, InstanceId={device.InstanceId ?? "null"}, Address={device.Address:X12}");
 
         byte? batteryLevel = null;
 
         // Try BLE GATT first
         if (device.DeviceType is BluetoothDeviceType.LowEnergy or BluetoothDeviceType.DualMode)
         {
-            CyanTooth.Platform.Helpers.DebugLogger.Log($" ReadBatteryLevelAsync: trying BLE GATT");
+            DebugLogger.Log($" ReadBatteryLevelAsync: trying BLE GATT");
             var bleDevice = await DeviceDiscoverer.GetBluetoothLeDeviceAsync(deviceId);
             if (bleDevice != null)
             {
                 batteryLevel = await _bleBatteryReader.ReadBatteryLevelAsync(bleDevice);
-                CyanTooth.Platform.Helpers.DebugLogger.Log($" ReadBatteryLevelAsync: BLE result={batteryLevel?.ToString() ?? "null"}");
+                DebugLogger.Log($" ReadBatteryLevelAsync: BLE result={batteryLevel?.ToString() ?? "null"}");
             }
             else
             {
-                CyanTooth.Platform.Helpers.DebugLogger.Log($" ReadBatteryLevelAsync: BLE device is null");
+                DebugLogger.Log($" ReadBatteryLevelAsync: BLE device is null");
             }
         }
 
         // Try Classic Bluetooth PnP
         if (!batteryLevel.HasValue && device.InstanceId != null)
         {
-            CyanTooth.Platform.Helpers.DebugLogger.Log($" ReadBatteryLevelAsync: trying BTC with InstanceId={device.InstanceId}");
+            DebugLogger.Log($" ReadBatteryLevelAsync: trying BTC with InstanceId={device.InstanceId}");
             batteryLevel = _btcBatteryReader.ReadBatteryLevel(device.InstanceId);
-            CyanTooth.Platform.Helpers.DebugLogger.Log($" ReadBatteryLevelAsync: BTC InstanceId result={batteryLevel?.ToString() ?? "null"}");
+            DebugLogger.Log($" ReadBatteryLevelAsync: BTC InstanceId result={batteryLevel?.ToString() ?? "null"}");
         }
 
         // Try using MAC address
         if (!batteryLevel.HasValue && device.Address != 0)
         {
-            CyanTooth.Platform.Helpers.DebugLogger.Log($" ReadBatteryLevelAsync: trying BTC with MAC={device.Address:X12}");
+            DebugLogger.Log($" ReadBatteryLevelAsync: trying BTC with MAC={device.Address:X12}");
             batteryLevel = _btcBatteryReader.ReadBatteryLevelByMac(device.Address);
-            CyanTooth.Platform.Helpers.DebugLogger.Log($" ReadBatteryLevelAsync: BTC MAC result={batteryLevel?.ToString() ?? "null"}");
+            DebugLogger.Log($" ReadBatteryLevelAsync: BTC MAC result={batteryLevel?.ToString() ?? "null"}");
         }
 
         if (batteryLevel.HasValue && device.BatteryLevel != batteryLevel.Value)
@@ -260,7 +261,7 @@ public class BluetoothService : IDisposable
             });
         }
 
-        CyanTooth.Platform.Helpers.DebugLogger.Log($" ReadBatteryLevelAsync: final result={batteryLevel?.ToString() ?? "null"}");
+        DebugLogger.Log($" ReadBatteryLevelAsync: final result={batteryLevel?.ToString() ?? "null"}");
         return batteryLevel;
     }
 

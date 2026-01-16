@@ -1,7 +1,7 @@
+using CyanTooth.Platform.Helpers;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using CyanTooth.Platform.Helpers;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
