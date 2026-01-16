@@ -1,10 +1,12 @@
 using CyanTooth.Platform.Helpers;
+
+
 using Windows.UI.Notifications;
 using Windows.Data.Xml.Dom;
 using CyanTooth.Core.Events;
 using CyanTooth.Core.Models;
 
-using CyanTooth.Platform.Helpers;
+
 namespace CyanTooth.Core.Services;
 
 /// <summary>

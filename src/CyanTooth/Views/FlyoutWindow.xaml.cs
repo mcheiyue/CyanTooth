@@ -1,10 +1,12 @@
 using CyanTooth.Platform.Helpers;
+
+
 using System;
 using System.Windows;
 using CyanTooth.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 
-using CyanTooth.Platform.Helpers;
+
 namespace CyanTooth.Views;
 
 /// <summary>

@@ -1,8 +1,10 @@
 using CyanTooth.Platform.Helpers;
+
+
 using Windows.Devices.Bluetooth;
 using Windows.Devices.Enumeration;
 
-using CyanTooth.Platform.Helpers;
+
 namespace CyanTooth.Platform.Bluetooth;
 
 /// <summary>

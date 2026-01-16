@@ -1,10 +1,12 @@
 using CyanTooth.Platform.Helpers;
+
+
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using CyanTooth.ViewModels;
 
-using CyanTooth.Platform.Helpers;
+
 namespace CyanTooth.Controls;
 
 /// <summary>

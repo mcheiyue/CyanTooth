@@ -1,4 +1,6 @@
 using CyanTooth.Platform.Helpers;
+
+
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,7 +12,7 @@ using CommunityToolkit.Mvvm.Input;
 using CyanTooth.Core.Models;
 using CyanTooth.Core.Services;
 
-using CyanTooth.Platform.Helpers;
+
 namespace CyanTooth.ViewModels;
 
 /// <summary>

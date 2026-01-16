@@ -1,4 +1,6 @@
 using CyanTooth.Platform.Helpers;
+
+
 using System;
 using System.Linq;
 using System.Collections.Generic;
@@ -8,7 +10,7 @@ using System.Windows;
 using CyanTooth.Core.Services;
 using CyanTooth.Views;
 
-using CyanTooth.Platform.Helpers;
+
 namespace CyanTooth.ViewModels;
 
 /// <summary>

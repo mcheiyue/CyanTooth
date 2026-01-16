@@ -1,7 +1,9 @@
 using CyanTooth.Platform.Helpers;
+
+
 using CommunityToolkit.Mvvm.ComponentModel;
 
-using CyanTooth.Platform.Helpers;
+
 namespace CyanTooth.Core.Models;
 
 /// <summary>

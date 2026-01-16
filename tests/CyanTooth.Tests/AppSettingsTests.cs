@@ -1,8 +1,10 @@
 using CyanTooth.Platform.Helpers;
+
+
 using CyanTooth.Core.Models;
 using Xunit;
 
-using CyanTooth.Platform.Helpers;
+
 namespace CyanTooth.Tests;
 
 public class AppSettingsTests

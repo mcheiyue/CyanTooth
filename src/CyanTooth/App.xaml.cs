@@ -1,3 +1,5 @@
+using CyanTooth.Platform.Helpers;
+
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,7 +10,7 @@ using CyanTooth.Core.Services;
 using CyanTooth.ViewModels;
 using Wpf.Ui.Appearance;
 using System.Collections.Generic;
-using CyanTooth.Platform.Helpers;
+
 
 namespace CyanTooth;
 

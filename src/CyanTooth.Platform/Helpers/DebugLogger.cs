@@ -1,11 +1,11 @@
 using CyanTooth.Platform.Helpers;
+
+
 using System;
 using System.IO;
 using System.Windows;
 using System.Diagnostics;
 
-using CyanTooth.Platform.Helpers;
-namespace CyanTooth.Platform.Helpers;
 
 /// <summary>
 /// 生产级线程安全日志器。
@@ -56,7 +56,7 @@ public static class DebugLogger
                     Directory.CreateDirectory(_logDirectory);
                 }
 
-                // 使用唯一的日志文件名，避免与系统自带的 debug.log 混淆
+                // 使用唯一的日志文件名，避免与系统自带的 cyantooth_runtime.log 混淆
                 _logPath = Path.Combine(_logDirectory, "cyantooth_runtime.log");
                 
                 // 写入启动标记
