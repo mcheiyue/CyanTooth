@@ -31,6 +31,7 @@ public class AudioEndpointEnumerator : IDisposable
         {
             // Enumerate ALL audio endpoints (not just active) - matching reference implementation
             var collection = _deviceEnumerator.EnumAudioEndpoints(EDataFlow.eAll, DEVICE_STATE.DEVICE_STATEMASK_ALL);
+            if (collection == null) return _endpoints;
             
             uint count = collection.GetCount();
             Helpers.DebugLogger.Log($"GetBluetoothAudioEndpoints: total audio endpoints={count}");
@@ -53,6 +54,7 @@ public class AudioEndpointEnumerator : IDisposable
                         try
                         {
                             var connector = topology.GetConnector(j);
+                            if (connector == null) continue;
                             
                             // Get the connected-to connector
                             IConnector? connectedTo = null;
@@ -70,7 +72,10 @@ public class AudioEndpointEnumerator : IDisposable
                             // Get the topology object of the connected part
                             var connectedPart = (IPart)connectedTo;
                             var connectedTopology = connectedPart.GetTopologyObject();
-                            string connectedDeviceId = connectedTopology.GetDeviceId();
+                            if (connectedTopology == null) continue;
+
+                            string? connectedDeviceId = connectedTopology.GetDeviceId();
+                            if (string.IsNullOrEmpty(connectedDeviceId)) continue;
 
                             // Check if this is a Bluetooth device - key check from reference!
                             // The connected device ID should start with "{2}.\\?\bth"
@@ -84,13 +89,16 @@ public class AudioEndpointEnumerator : IDisposable
                             // Get the connected device and activate IKsControl on it
                             var connectedDevice = _deviceEnumerator.GetDevice(connectedDeviceId);
                             IKsControl? ksControl = null;
-                            try
+                            if (connectedDevice != null)
                             {
-                                ksControl = connectedDevice.Activate<IKsControl>(Ole32.CLSCTX.CLSCTX_ALL);
-                            }
-                            catch (Exception ex)
-                            {
-                                Helpers.DebugLogger.Log($"GetBluetoothAudioEndpoints: failed to activate IKsControl: {ex.Message}");
+                                try
+                                {
+                                    ksControl = connectedDevice.Activate<IKsControl>(Ole32.CLSCTX.CLSCTX_ALL);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Helpers.DebugLogger.Log($"GetBluetoothAudioEndpoints: failed to activate IKsControl: {ex.Message}");
+                                }
                             }
 
                             // Get endpoint properties
@@ -98,21 +106,28 @@ public class AudioEndpointEnumerator : IDisposable
                             var propertyStore = device.OpenPropertyStore(STGM.STGM_READ);
                             
                             string friendlyName = "Unknown";
-                            try
+                            if (propertyStore != null)
                             {
-                                var friendlyNameKey = new Ole32.PROPERTYKEY(new Guid("a45c254e-df1c-4efd-8020-67d146a850e0"), 14);
-                                var friendlyNameProp = propertyStore.GetValue(friendlyNameKey);
-                                if (friendlyNameProp != null)
-                                    friendlyName = friendlyNameProp.ToString() ?? "Unknown";
+                                try
+                                {
+                                    var friendlyNameKey = new Ole32.PROPERTYKEY(new Guid("a45c254e-df1c-4efd-8020-67d146a850e0"), 14);
+                                    var friendlyNameProp = propertyStore.GetValue(friendlyNameKey);
+                                    if (friendlyNameProp != null)
+                                        friendlyName = friendlyNameProp.ToString() ?? "Unknown";
+                                }
+                                catch { }
                             }
-                            catch { }
 
                             Guid containerId = Guid.Empty;
-                            try
+                            if (propertyStore != null)
                             {
-                                containerId = (Guid)propertyStore.GetValue(Ole32.PROPERTYKEY.System.Devices.ContainerId);
+                                try
+                                {
+                                    var val = propertyStore.GetValue(Ole32.PROPERTYKEY.System.Devices.ContainerId);
+                                    if (val is Guid g) containerId = g;
+                                }
+                                catch { }
                             }
-                            catch { }
 
                             var endpointInfo = new AudioEndpointInfo
                             {
@@ -147,110 +162,6 @@ public class AudioEndpointEnumerator : IDisposable
 
         Helpers.DebugLogger.Log($"GetBluetoothAudioEndpoints: returning {_endpoints.Count} endpoints");
         return _endpoints;
-    }
-
-    /// <summary>
-    /// Gets audio endpoint info for a specific device
-    /// </summary>
-    private AudioEndpointInfo? GetEndpointInfo(IMMDevice device)
-    {
-        try
-        {
-            string deviceId = device.GetId();
-            var propertyStore = device.OpenPropertyStore(STGM.STGM_READ);
-
-            // Get friendly name - PKEY_Device_FriendlyName
-            var friendlyNameKey = new Ole32.PROPERTYKEY(new Guid("a45c254e-df1c-4efd-8020-67d146a850e0"), 14);
-            string friendlyName = "Unknown";
-            try
-            {
-                var friendlyNameProp = propertyStore.GetValue(friendlyNameKey);
-                if (friendlyNameProp != null)
-                {
-                    friendlyName = friendlyNameProp.ToString() ?? "Unknown";
-                }
-            }
-            catch { }
-
-            // Get container ID - PKEY_Devices_ContainerId
-            var containerIdKey = new Ole32.PROPERTYKEY(new Guid("8c7ed206-3f8a-4827-b3ab-ae9e1faefc6c"), 2);
-            Guid containerId = Guid.Empty;
-            try
-            {
-                var containerIdProp = propertyStore.GetValue(containerIdKey);
-                if (containerIdProp is Guid guid)
-                {
-                    containerId = guid;
-                }
-            }
-            catch { }
-
-            // Check if this is a Bluetooth device by examining the device ID
-            bool isBluetooth = IsBluetoothEndpoint(deviceId);
-
-            // Try to get the IKsControl interface for Bluetooth audio control
-            IKsControl? ksControl = null;
-            if (isBluetooth)
-            {
-                ksControl = TryGetKsControl(device);
-            }
-
-            return new AudioEndpointInfo
-            {
-                DeviceId = deviceId,
-                FriendlyName = friendlyName,
-                ContainerId = containerId,
-                IsBluetooth = isBluetooth,
-                KsControl = ksControl,
-                MMDevice = device
-            };
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
-    /// <summary>
-    /// Determines if an audio endpoint is a Bluetooth device
-    /// </summary>
-    private static bool IsBluetoothEndpoint(string deviceId)
-    {
-        // Bluetooth audio endpoints typically have IDs containing "bth" or "BTHENUM"
-        return deviceId.Contains("bth", StringComparison.OrdinalIgnoreCase) ||
-               deviceId.Contains("BTHENUM", StringComparison.OrdinalIgnoreCase);
-    }
-
-    /// <summary>
-    /// Attempts to get the IKsControl interface for Bluetooth audio control
-    /// </summary>
-    private static IKsControl? TryGetKsControl(IMMDevice device)
-    {
-        try
-        {
-            // Activate IDeviceTopology to get to the connector
-            var topology = device.Activate<IDeviceTopology>(Ole32.CLSCTX.CLSCTX_ALL);
-            if (topology == null) return null;
-
-            uint connectorCount = topology.GetConnectorCount();
-            if (connectorCount == 0) return null;
-
-            var connector = topology.GetConnector(0);
-            
-            // Get the connected connector (the one on the adapter side)
-            var connectedConnector = connector.GetConnectedTo();
-            if (connectedConnector == null) return null;
-            
-            // Try to get IKsControl from the connected connector
-            var part = (IPart)connectedConnector;
-            var ksControlObj = part.Activate(Ole32.CLSCTX.CLSCTX_ALL, KsInterop.IID_IKsControl);
-            
-            return ksControlObj as IKsControl;
-        }
-        catch
-        {
-            return null;
-        }
     }
 
     /// <summary>

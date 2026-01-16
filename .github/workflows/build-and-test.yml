@@ -1,0 +1,41 @@
+name: CI - Build and Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+        platform: [x64, ARM64]
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+    
+    - name: 安装 .NET 8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+    
+    - name: 还原依赖
+      run: dotnet restore
+    
+    - name: 构建项目
+      run: dotnet build --configuration ${{ matrix.configuration }} --no-restore
+    
+    - name: 运行测试
+      if: matrix.platform == 'x64' # 只在 x64 上运行测试
+      run: dotnet test --configuration ${{ matrix.configuration }} --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
+    
+    - name: 上传测试报告
+      if: always() && matrix.platform == 'x64'
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-${{ matrix.configuration }}
+        path: '**/test-results.trx'

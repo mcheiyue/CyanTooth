@@ -6,7 +6,7 @@
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         xmlns:vm="clr-namespace:BluetoothManager.ViewModels"
         mc:Ignorable="d"
-        Title="设置 - 蓝牙管理器"
+        Title="设置 - CyanTooth"
         Width="500" Height="600"
         MinWidth="450" MinHeight="500"
         WindowStartupLocation="CenterScreen"
@@ -113,7 +113,7 @@
                         <ui:SymbolIcon Grid.Column="0" Symbol="Bluetooth24" FontSize="40" Margin="0,0,16,0"/>
 
                         <StackPanel Grid.Column="1">
-                            <TextBlock Text="蓝牙管理器" FontWeight="SemiBold" FontSize="16"/>
+                            <TextBlock Text="CyanTooth" FontWeight="SemiBold" FontSize="16"/>
                             <TextBlock Text="版本 1.0.0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                             <TextBlock Text="Windows 现代蓝牙设备管理工具"
                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"

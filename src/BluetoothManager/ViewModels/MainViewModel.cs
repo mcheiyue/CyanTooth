@@ -112,7 +112,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             Devices.Clear();
             _bluetoothService.RefreshDevices();
-            await Task.Delay(1000); // Allow time for discovery
+            // 增加一点延迟，确保搜索结果能显示出来
+            await Task.Delay(1500);
         }
         finally
         {

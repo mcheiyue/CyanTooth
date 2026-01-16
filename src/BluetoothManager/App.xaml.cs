@@ -1,3 +1,4 @@
+using BluetoothManager.Core.Helpers;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -25,20 +26,20 @@ public partial class App : System.Windows.Application
         AppDomain.CurrentDomain.UnhandledException += (s, e) =>
         {
             var ex = e.ExceptionObject as Exception;
-            System.IO.File.WriteAllText("crash.log", $"[UnhandledException] {DateTime.Now}\n{ex}");
-            System.Windows.MessageBox.Show($"Fatal Error:\n{ex?.Message}\n\nSee crash.log for details.", "Crash", MessageBoxButton.OK, MessageBoxImage.Error);
+            DebugLogger.LogError("[UnhandledException]", ex);
+            System.Windows.MessageBox.Show($"致命错误:\n{ex?.Message}\n\n请在 AppData 目录中查看日志获取详细信息。", "程序崩溃", MessageBoxButton.OK, MessageBoxImage.Error);
         };
         
         DispatcherUnhandledException += (s, e) =>
         {
-            System.IO.File.WriteAllText("crash.log", $"[DispatcherUnhandledException] {DateTime.Now}\n{e.Exception}");
-            System.Windows.MessageBox.Show($"UI Error:\n{e.Exception.Message}\n\nSee crash.log for details.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            DebugLogger.LogError("[DispatcherUnhandledException]", e.Exception);
+            System.Windows.MessageBox.Show($"UI 错误:\n{e.Exception.Message}\n\n请在 AppData 目录中查看日志获取详细信息。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
             e.Handled = true;
         };
         
         TaskScheduler.UnobservedTaskException += (s, e) =>
         {
-            System.IO.File.AppendAllText("crash.log", $"\n[UnobservedTaskException] {DateTime.Now}\n{e.Exception}");
+            DebugLogger.LogError("[UnobservedTaskException]", e.Exception);
             e.SetObserved();
         };
 
@@ -107,7 +108,7 @@ public partial class App : System.Windows.Application
         _trayIcon = new Hardcodet.Wpf.TaskbarNotification.TaskbarIcon
         {
             Icon = iconStream != null ? new System.Drawing.Icon(iconStream) : System.Drawing.SystemIcons.Application,
-            ToolTipText = "蓝牙管理器",
+            ToolTipText = "CyanTooth",
             ContextMenu = CreateContextMenu()
         };
 
@@ -180,8 +181,11 @@ public partial class App : System.Windows.Application
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[ERROR] ShowFlyout failed: {ex}");
-            System.Windows.MessageBox.Show($"ShowFlyout Error:\n{ex.Message}\n\n{ex.StackTrace}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            if (ex is not null)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ERROR] ShowFlyout failed: {ex}");
+                System.Windows.MessageBox.Show($"ShowFlyout 错误:\n{ex.Message}\n\n{ex.StackTrace}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 
@@ -198,8 +202,11 @@ public partial class App : System.Windows.Application
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[ERROR] ShowSettings failed: {ex}");
-            System.Windows.MessageBox.Show($"ShowSettings Error:\n{ex.Message}\n\n{ex.StackTrace}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            if (ex is not null)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ERROR] ShowSettings failed: {ex}");
+                System.Windows.MessageBox.Show($"ShowSettings 错误:\n{ex.Message}\n\n{ex.StackTrace}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 

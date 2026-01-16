@@ -103,44 +103,47 @@ public class BluetoothService : IDisposable
     /// </summary>
     public async Task<bool> ConnectAsync(string deviceId)
     {
-        Helpers.DebugLogger.Log($" ConnectAsync: deviceId={deviceId}");
-        
-        if (!_devices.TryGetValue(deviceId, out var device))
+        return await Task.Run(() =>
         {
-            Helpers.DebugLogger.Log($" ConnectAsync: device not found in _devices");
+            Helpers.DebugLogger.Log($" ConnectAsync: deviceId={deviceId}");
+            
+            if (!_devices.TryGetValue(deviceId, out var device))
+            {
+                Helpers.DebugLogger.Log($" ConnectAsync: device not found in _devices");
+                return false;
+            }
+
+            Helpers.DebugLogger.Log($" ConnectAsync: device={device.Name}, Address={device.Address:X12}");
+
+            // Method 1: Try KsControl (primary method, fast and reliable)
+            var endpoints = _audioEnumerator.FindEndpointsByMacAddress(device.Address, device.Name);
+            Helpers.DebugLogger.Log($" ConnectAsync: trying KsControl, found {endpoints.Count()} endpoints by MAC/Name");
+            
+            foreach (var endpoint in endpoints)
+            {
+                Helpers.DebugLogger.Log($" ConnectAsync: trying endpoint DeviceId={endpoint.DeviceId}, HasKsControl={endpoint.KsControl != null}");
+                if (_audioConnector.Connect(endpoint))
+                {
+                    Helpers.DebugLogger.Log($" ConnectAsync: SUCCESS via KsControl");
+                    return true;
+                }
+            }
+
+            // Method 2: Try using the container ID
+            if (device.ContainerId.HasValue)
+            {
+                Helpers.DebugLogger.Log($" ConnectAsync: trying ContainerId={device.ContainerId.Value}");
+                var endpoint = _audioEnumerator.FindEndpointByContainerId(device.ContainerId.Value);
+                if (endpoint != null)
+                {
+                    Helpers.DebugLogger.Log($" ConnectAsync: found endpoint by ContainerId, HasKsControl={endpoint.KsControl != null}");
+                    return _audioConnector.Connect(endpoint);
+                }
+            }
+
+            Helpers.DebugLogger.Log($" ConnectAsync: FAILED - no valid endpoint found");
             return false;
-        }
-
-        Helpers.DebugLogger.Log($" ConnectAsync: device={device.Name}, Address={device.Address:X12}");
-
-        // Method 1: Try KsControl (primary method, fast and reliable)
-        var endpoints = _audioEnumerator.FindEndpointsByMacAddress(device.Address, device.Name);
-        Helpers.DebugLogger.Log($" ConnectAsync: trying KsControl, found {endpoints.Count()} endpoints by MAC/Name");
-        
-        foreach (var endpoint in endpoints)
-        {
-            Helpers.DebugLogger.Log($" ConnectAsync: trying endpoint DeviceId={endpoint.DeviceId}, HasKsControl={endpoint.KsControl != null}");
-            if (_audioConnector.Connect(endpoint))
-            {
-                Helpers.DebugLogger.Log($" ConnectAsync: SUCCESS via KsControl");
-                return true;
-            }
-        }
-
-        // Method 2: Try using the container ID
-        if (device.ContainerId.HasValue)
-        {
-            Helpers.DebugLogger.Log($" ConnectAsync: trying ContainerId={device.ContainerId.Value}");
-            var endpoint = _audioEnumerator.FindEndpointByContainerId(device.ContainerId.Value);
-            if (endpoint != null)
-            {
-                Helpers.DebugLogger.Log($" ConnectAsync: found endpoint by ContainerId, HasKsControl={endpoint.KsControl != null}");
-                return _audioConnector.Connect(endpoint);
-            }
-        }
-
-        Helpers.DebugLogger.Log($" ConnectAsync: FAILED - no valid endpoint found");
-        return false;
+        });
     }
 
     /// <summary>
@@ -148,50 +151,50 @@ public class BluetoothService : IDisposable
     /// </summary>
     public async Task<bool> DisconnectAsync(string deviceId)
     {
-        Helpers.DebugLogger.Log($" DisconnectAsync: deviceId={deviceId}");
-        
-        if (!_devices.TryGetValue(deviceId, out var device))
+        return await Task.Run(() =>
         {
-            Helpers.DebugLogger.Log($" DisconnectAsync: device not found");
-            return false;
-        }
-
-        Helpers.DebugLogger.Log($" DisconnectAsync: device={device.Name}, Address={device.Address:X12}");
-
-        // Method 1: Try KsControl on ALL endpoints (like ToothTray does)
-        // A Bluetooth device typically has multiple audio endpoints (A2DP, HFP, etc.)
-        // We must disconnect ALL of them to fully disconnect the device.
-        var endpoints = _audioEnumerator.FindEndpointsByMacAddress(device.Address, device.Name).ToList();
-        Helpers.DebugLogger.Log($" DisconnectAsync: trying KsControl, found {endpoints.Count} endpoints");
-        
-        bool anySuccess = false;
-        foreach (var endpoint in endpoints)
-        {
-            Helpers.DebugLogger.Log($" DisconnectAsync: trying endpoint DeviceId={endpoint.DeviceId}, HasKsControl={endpoint.KsControl != null}");
-            if (_audioConnector.Disconnect(endpoint))
+            Helpers.DebugLogger.Log($" DisconnectAsync: deviceId={deviceId}");
+            
+            if (!_devices.TryGetValue(deviceId, out var device))
             {
-                Helpers.DebugLogger.Log($" DisconnectAsync: endpoint disconnected successfully");
-                anySuccess = true;
+                Helpers.DebugLogger.Log($" DisconnectAsync: device not found");
+                return false;
             }
-            // Continue to disconnect ALL endpoints, don't return early
-        }
 
-        // Method 2: Also try using the container ID if we haven't succeeded yet
-        if (!anySuccess && device.ContainerId.HasValue)
-        {
-            Helpers.DebugLogger.Log($" DisconnectAsync: trying ContainerId={device.ContainerId.Value}");
-            var endpoint = _audioEnumerator.FindEndpointByContainerId(device.ContainerId.Value);
-            if (endpoint != null)
+            Helpers.DebugLogger.Log($" DisconnectAsync: device={device.Name}, Address={device.Address:X12}");
+
+            // Method 1: Try KsControl on ALL endpoints (like ToothTray does)
+            var endpoints = _audioEnumerator.FindEndpointsByMacAddress(device.Address, device.Name).ToList();
+            Helpers.DebugLogger.Log($" DisconnectAsync: trying KsControl, found {endpoints.Count} endpoints");
+            
+            bool anySuccess = false;
+            foreach (var endpoint in endpoints)
             {
+                Helpers.DebugLogger.Log($" DisconnectAsync: trying endpoint DeviceId={endpoint.DeviceId}, HasKsControl={endpoint.KsControl != null}");
                 if (_audioConnector.Disconnect(endpoint))
                 {
+                    Helpers.DebugLogger.Log($" DisconnectAsync: endpoint disconnected successfully");
                     anySuccess = true;
                 }
             }
-        }
 
-        Helpers.DebugLogger.Log($" DisconnectAsync: {(anySuccess ? "SUCCESS" : "FAILED")}");
-        return anySuccess;
+            // Method 2: Also try using the container ID if we haven't succeeded yet
+            if (!anySuccess && device.ContainerId.HasValue)
+            {
+                Helpers.DebugLogger.Log($" DisconnectAsync: trying ContainerId={device.ContainerId.Value}");
+                var endpoint = _audioEnumerator.FindEndpointByContainerId(device.ContainerId.Value);
+                if (endpoint != null)
+                {
+                    if (_audioConnector.Disconnect(endpoint))
+                    {
+                        anySuccess = true;
+                    }
+                }
+            }
+
+            Helpers.DebugLogger.Log($" DisconnectAsync: {(anySuccess ? "SUCCESS" : "FAILED")}");
+            return anySuccess;
+        });
     }
 
     /// <summary>

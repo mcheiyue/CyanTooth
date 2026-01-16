@@ -23,7 +23,7 @@ public class ConfigService
     public ConfigService()
     {
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        var appFolder = Path.Combine(appDataPath, "BluetoothManager");
+        var appFolder = Path.Combine(appDataPath, "CyanTooth");
         Directory.CreateDirectory(appFolder);
         _configPath = Path.Combine(appFolder, "settings.json");
         _settings = LoadSettings();
@@ -149,11 +149,11 @@ public class ConfigService
 
             if (enable && appPath != null)
             {
-                key.SetValue("BluetoothManager", $"\"{appPath}\" --minimized");
+                key.SetValue("CyanTooth", $"\"{appPath}\" --minimized");
             }
             else
             {
-                key.DeleteValue("BluetoothManager", false);
+                key.DeleteValue("CyanTooth", false);
             }
         }
         catch

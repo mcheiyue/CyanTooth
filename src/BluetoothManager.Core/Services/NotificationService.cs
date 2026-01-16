@@ -10,7 +10,7 @@ namespace BluetoothManager.Core.Services;
 /// </summary>
 public class NotificationService
 {
-    private const string AppId = "BluetoothManager";
+    private const string AppId = "CyanTooth";
     private readonly ConfigService _configService;
 
     public NotificationService(ConfigService configService)
@@ -26,8 +26,8 @@ public class NotificationService
         if (!_configService.Settings.ShowConnectionNotifications)
             return;
 
-        var title = args.IsConnected ? "Device Connected" : "Device Disconnected";
-        var message = args.DeviceName ?? "Unknown Device";
+        var title = args.IsConnected ? "设备已连接" : "设备已断开";
+        var message = args.DeviceName ?? "未知设备";
         var icon = args.IsConnected ? "🔗" : "🔌";
 
         ShowToast(title, $"{icon} {message}");
@@ -52,8 +52,8 @@ public class NotificationService
         if (args.OldBatteryLevel.HasValue && args.OldBatteryLevel.Value <= threshold)
             return;
 
-        var title = "Low Battery Warning";
-        var message = $"🔋 {args.DeviceName ?? "Device"}: {args.NewBatteryLevel}%";
+        var title = "低电量警告";
+        var message = $"🔋 {args.DeviceName ?? "设备"}: {args.NewBatteryLevel}%";
 
         ShowToast(title, message);
     }
