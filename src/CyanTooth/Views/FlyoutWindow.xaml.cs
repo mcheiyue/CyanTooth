@@ -1,8 +1,8 @@
 using System;
 using System.Windows;
-using BluetoothManager.ViewModels;
+using CyanTooth.ViewModels;
 
-namespace BluetoothManager.Views;
+namespace CyanTooth.Views;
 
 /// <summary>
 /// Flyout window that appears when clicking the tray icon

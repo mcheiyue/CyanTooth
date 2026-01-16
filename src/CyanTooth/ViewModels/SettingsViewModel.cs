@@ -1,9 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using BluetoothManager.Core.Models;
-using BluetoothManager.Core.Services;
+using CyanTooth.Core.Models;
+using CyanTooth.Core.Services;
 
-namespace BluetoothManager.ViewModels;
+namespace CyanTooth.ViewModels;
 
 /// <summary>
 /// ViewModel for the settings window

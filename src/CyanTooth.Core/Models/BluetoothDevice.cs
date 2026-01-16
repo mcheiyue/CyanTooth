@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace BluetoothManager.Core.Models;
+namespace CyanTooth.Core.Models;
 
 /// <summary>
 /// Represents a Bluetooth device

@@ -1,7 +1,7 @@
 using System.Text.Json;
-using BluetoothManager.Core.Models;
+using CyanTooth.Core.Models;
 
-namespace BluetoothManager.Core.Services;
+namespace CyanTooth.Core.Services;
 
 /// <summary>
 /// Service for managing application configuration

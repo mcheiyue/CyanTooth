@@ -3,7 +3,7 @@ using Windows.Devices.Bluetooth;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using Windows.Storage.Streams;
 
-namespace BluetoothManager.Platform.Bluetooth;
+namespace CyanTooth.Platform.Bluetooth;
 
 /// <summary>
 /// Reads battery levels from BLE devices using GATT Battery Service

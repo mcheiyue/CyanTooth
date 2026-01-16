@@ -1,15 +1,15 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using BluetoothManager.Core.Helpers;
+using CyanTooth.Core.Helpers;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using BluetoothManager.Core.Services;
-using BluetoothManager.ViewModels;
+using CyanTooth.Core.Services;
+using CyanTooth.ViewModels;
 using Wpf.Ui.Appearance;
 
-namespace BluetoothManager;
+namespace CyanTooth;
 
 /// <summary>
 /// Main application class

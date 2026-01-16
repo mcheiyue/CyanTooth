@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace BluetoothManager.Core.Helpers;
+namespace CyanTooth.Core.Helpers;
 
 /// <summary>
 /// 增强的线程安全日志器，支持 AppData 存储和简单的日志滚动

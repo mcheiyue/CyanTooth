@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace BluetoothManager.Platform.Native;
+namespace CyanTooth.Platform.Native;
 
 /// <summary>
 /// KS (Kernel Streaming) Property structures for Bluetooth audio control

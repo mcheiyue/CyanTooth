@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
-using BluetoothManager.Platform.Native;
+using CyanTooth.Platform.Native;
 
-namespace BluetoothManager.Platform.Audio;
+namespace CyanTooth.Platform.Audio;
 
 /// <summary>
 /// Controls Bluetooth audio connection/disconnection using IKsControl

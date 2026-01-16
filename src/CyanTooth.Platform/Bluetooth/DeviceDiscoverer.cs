@@ -1,7 +1,7 @@
 using Windows.Devices.Bluetooth;
 using Windows.Devices.Enumeration;
 
-namespace BluetoothManager.Platform.Bluetooth;
+namespace CyanTooth.Platform.Bluetooth;
 
 /// <summary>
 /// Discovers and monitors Bluetooth devices using WinRT APIs

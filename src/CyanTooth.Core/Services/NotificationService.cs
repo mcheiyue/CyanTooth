@@ -1,9 +1,9 @@
 using Windows.UI.Notifications;
 using Windows.Data.Xml.Dom;
-using BluetoothManager.Core.Events;
-using BluetoothManager.Core.Models;
+using CyanTooth.Core.Events;
+using CyanTooth.Core.Models;
 
-namespace BluetoothManager.Core.Services;
+namespace CyanTooth.Core.Services;
 
 /// <summary>
 /// Service for showing Windows notifications

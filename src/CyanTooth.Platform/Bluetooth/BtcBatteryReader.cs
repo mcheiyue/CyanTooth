@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
-using BluetoothManager.Platform.Native;
+using CyanTooth.Platform.Native;
 
-namespace BluetoothManager.Platform.Bluetooth;
+namespace CyanTooth.Platform.Bluetooth;
 
 /// <summary>
 /// Reads battery levels from Classic Bluetooth devices using Windows PnP API

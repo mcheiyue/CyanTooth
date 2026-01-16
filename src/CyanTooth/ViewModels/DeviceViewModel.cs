@@ -1,8 +1,8 @@
 using System;
 using CommunityToolkit.Mvvm.ComponentModel;
-using BluetoothManager.Core.Models;
+using CyanTooth.Core.Models;
 
-namespace BluetoothManager.ViewModels;
+namespace CyanTooth.ViewModels;
 
 /// <summary>
 /// ViewModel for a single Bluetooth device

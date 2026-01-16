@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace BluetoothManager.Platform.Bluetooth;
+namespace CyanTooth.Platform.Bluetooth;
 
 /// <summary>
 /// P/Invoke wrapper for BluetoothSetServiceState API.

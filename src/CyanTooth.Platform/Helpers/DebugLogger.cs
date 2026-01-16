@@ -1,4 +1,4 @@
-namespace BluetoothManager.Platform.Helpers;
+namespace CyanTooth.Platform.Helpers;
 
 /// <summary>
 /// Thread-safe debug logger

@@ -1,4 +1,4 @@
-namespace BluetoothManager.Core.Events;
+namespace CyanTooth.Core.Events;
 
 /// <summary>
 /// Event args for device connection state changes

@@ -1,4 +1,4 @@
-namespace BluetoothManager.Core.Models;
+namespace CyanTooth.Core.Models;
 
 /// <summary>
 /// Application settings

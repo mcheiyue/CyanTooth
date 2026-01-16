@@ -1,7 +1,7 @@
-using BluetoothManager.Core.Models;
+using CyanTooth.Core.Models;
 using Xunit;
 
-namespace BluetoothManager.Tests;
+namespace CyanTooth.Tests;
 
 public class AppSettingsTests
 {

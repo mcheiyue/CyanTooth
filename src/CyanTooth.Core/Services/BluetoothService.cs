@@ -1,10 +1,10 @@
 using System.Collections.Concurrent;
-using BluetoothManager.Core.Events;
-using BluetoothManager.Core.Models;
-using BluetoothManager.Platform.Audio;
-using BluetoothManager.Platform.Bluetooth;
+using CyanTooth.Core.Events;
+using CyanTooth.Core.Models;
+using CyanTooth.Platform.Audio;
+using CyanTooth.Platform.Bluetooth;
 
-namespace BluetoothManager.Core.Services;
+namespace CyanTooth.Core.Services;
 
 /// <summary>
 /// Main service for managing Bluetooth devices

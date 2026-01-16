@@ -1,9 +1,9 @@
 using System.Runtime.InteropServices;
-using BluetoothManager.Platform.Native;
+using CyanTooth.Platform.Native;
 using Vanara.PInvoke;
 using static Vanara.PInvoke.CoreAudio;
 
-namespace BluetoothManager.Platform.Audio;
+namespace CyanTooth.Platform.Audio;
 
 /// <summary>
 /// Enumerates Bluetooth audio endpoints using CoreAudio API

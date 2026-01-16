@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Windows;
-using BluetoothManager.Core.Services;
-using BluetoothManager.Views;
+using CyanTooth.Core.Services;
+using CyanTooth.Views;
 
-namespace BluetoothManager.ViewModels;
+namespace CyanTooth.ViewModels;
 
 /// <summary>
 /// ViewModel for the system tray icon

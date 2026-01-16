@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 
-namespace BluetoothManager.Converters;
+namespace CyanTooth.Converters;
 
 /// <summary>
 /// Converts boolean to visibility

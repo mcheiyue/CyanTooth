@@ -1,9 +1,9 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using BluetoothManager.ViewModels;
+using CyanTooth.ViewModels;
 
-namespace BluetoothManager.Controls;
+namespace CyanTooth.Controls;
 
 /// <summary>
 /// Device card control for displaying a Bluetooth device

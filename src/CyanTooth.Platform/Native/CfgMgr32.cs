@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace BluetoothManager.Platform.Native;
+namespace CyanTooth.Platform.Native;
 
 /// <summary>
 /// CfgMgr32 P/Invoke definitions for reading Bluetooth battery levels
