@@ -1,6 +1,8 @@
 using System;
 using System.Windows;
 using CyanTooth.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
+using CyanTooth.Platform.Helpers;
 
 namespace CyanTooth.Views;
 
@@ -21,12 +23,6 @@ public partial class SettingsWindow : Wpf.Ui.Controls.FluentWindow
         catch (Exception ex)
         {
             DebugLogger.LogError("SettingsWindow 初始化失败", ex);
-            throw;
-        }
-    }
-        catch (Exception ex)
-        {
-            System.IO.File.AppendAllText("crash.log", $"[{DateTime.Now}] SettingsWindow CRASH:\n{ex}\n");
             throw;
         }
     }

@@ -1,6 +1,8 @@
 using System;
 using System.Windows;
 using CyanTooth.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
+using CyanTooth.Platform.Helpers;
 
 namespace CyanTooth.Views;
 
@@ -21,12 +23,6 @@ public partial class FlyoutWindow : Wpf.Ui.Controls.FluentWindow
         catch (Exception ex)
         {
             DebugLogger.LogError("FlyoutWindow 初始化失败", ex);
-            throw;
-        }
-    }
-        catch (Exception ex)
-        {
-            System.IO.File.AppendAllText("crash.log", $"[{DateTime.Now}] FlyoutWindow CRASH:\n{ex}\n");
             throw;
         }
     }
@@ -54,9 +50,9 @@ public partial class FlyoutWindow : Wpf.Ui.Controls.FluentWindow
                 UseShellExecute = true
             });
         }
-        catch
+        catch (Exception ex)
         {
-            // Ignore errors
+            DebugLogger.LogError("打开系统设置失败", ex);
         }
     }
 }
