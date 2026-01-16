@@ -4,6 +4,7 @@ using Windows.Devices.Bluetooth;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using Windows.Storage.Streams;
 
+using CyanTooth.Platform.Helpers;
 namespace CyanTooth.Platform.Bluetooth;
 
 /// <summary>

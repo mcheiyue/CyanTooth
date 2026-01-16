@@ -2,6 +2,7 @@ using CyanTooth.Platform.Helpers;
 using System.Runtime.InteropServices;
 using CyanTooth.Platform.Native;
 
+using CyanTooth.Platform.Helpers;
 namespace CyanTooth.Platform.Bluetooth;
 
 /// <summary>

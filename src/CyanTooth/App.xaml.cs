@@ -10,6 +10,7 @@ using CyanTooth.ViewModels;
 using Wpf.Ui.Appearance;
 using System.Collections.Generic;
 
+using CyanTooth.Platform.Helpers;
 namespace CyanTooth;
 
 /// <summary>

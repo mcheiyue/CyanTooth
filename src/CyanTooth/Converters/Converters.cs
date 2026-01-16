@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 
+using CyanTooth.Platform.Helpers;
 namespace CyanTooth.Converters;
 
 /// <summary>

@@ -4,6 +4,7 @@ using CyanTooth.Platform.Native;
 using Vanara.PInvoke;
 using static Vanara.PInvoke.CoreAudio;
 
+using CyanTooth.Platform.Helpers;
 namespace CyanTooth.Platform.Audio;
 
 /// <summary>

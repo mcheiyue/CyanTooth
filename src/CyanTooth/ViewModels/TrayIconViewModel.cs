@@ -8,6 +8,7 @@ using System.Windows;
 using CyanTooth.Core.Services;
 using CyanTooth.Views;
 
+using CyanTooth.Platform.Helpers;
 namespace CyanTooth.ViewModels;
 
 /// <summary>

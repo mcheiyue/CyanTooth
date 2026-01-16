@@ -4,6 +4,7 @@ using System.IO;
 using System.Windows;
 using System.Diagnostics;
 
+using CyanTooth.Platform.Helpers;
 namespace CyanTooth.Platform.Helpers;
 
 /// <summary>
