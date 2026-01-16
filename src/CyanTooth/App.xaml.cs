@@ -1,4 +1,3 @@
-using CyanTooth.Platform.Helpers;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,8 +8,8 @@ using CyanTooth.Core.Services;
 using CyanTooth.ViewModels;
 using Wpf.Ui.Appearance;
 using System.Collections.Generic;
-
 using CyanTooth.Platform.Helpers;
+
 namespace CyanTooth;
 
 /// <summary>
@@ -76,7 +75,7 @@ public partial class App : System.Windows.Application
         DebugLogger.LogError($"[{source}] 致命错误: {msg}", ex);
         
         // 确保在闪退前给用户提示
-        MessageBox.Show($"程序发生异常 ({source}):\n{msg}\n\n详细日志请查看: %LocalAppData%\\CyanTooth\\logs\\debug.log", 
+        MessageBox.Show($"程序发生异常 ({source}):\n{msg}\n\n详细日志请查看: %LocalAppData%\\CyanTooth\\logs\\cyantooth_runtime.log", 
                         "CyanTooth 错误", MessageBoxButton.OK, MessageBoxImage.Error);
         
         if (source != "DispatcherUnhandledException")
