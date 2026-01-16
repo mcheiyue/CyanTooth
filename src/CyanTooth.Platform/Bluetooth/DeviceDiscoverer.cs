@@ -1,4 +1,4 @@
-using CyanTooth.Platform.Helpers;
+
 
 
 using Windows.Devices.Bluetooth;

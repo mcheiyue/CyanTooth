@@ -1,5 +1,4 @@
-using CyanTooth.Platform.Helpers;
-
+namespace CyanTooth.Platform.Helpers;
 
 using System;
 using System.IO;
