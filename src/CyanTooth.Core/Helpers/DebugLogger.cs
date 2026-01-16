@@ -1,17 +1,18 @@
 using System;
 using System.IO;
+using System.Windows;
 
 namespace CyanTooth.Core.Helpers;
 
 /// <summary>
-/// 增强的线程安全日志器，支持 AppData 存储和简单的日志滚动。
-/// 严格禁止向程序运行目录写入日志，确保在单文件打包模式下的路径稳定性。
+/// 生产级线程安全日志器。
+/// 严格锁定路径为 %LocalAppData%，禁止任何形式的相对路径回退。
 /// </summary>
 public static class DebugLogger
 {
     private static readonly object _lock = new();
-    private static string? _logDirectory;
     private static string? _logPath;
+    private static string? _logDirectory;
     private const long MaxLogSize = 10 * 1024 * 1024; // 10MB
     private const int MaxArchiveFiles = 5;
 
@@ -30,15 +31,16 @@ public static class DebugLogger
 
             try
             {
-                // 统一使用 LocalApplicationData (%LocalAppData%)
-                string appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                if (string.IsNullOrEmpty(appData))
+                // 获取 LocalAppData 绝对路径
+                string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                
+                // 如果系统路径获取失败，强制报错，绝不使用相对路径
+                if (string.IsNullOrEmpty(localAppData))
                 {
-                    // 极端备选：系统临时目录
-                    appData = Path.GetTempPath();
+                    throw new InvalidOperationException("无法获取系统的 LocalApplicationData 路径。");
                 }
 
-                _logDirectory = Path.Combine(appData, "CyanTooth", "logs");
+                _logDirectory = Path.Combine(localAppData, "CyanTooth", "logs");
                 
                 if (!Directory.Exists(_logDirectory))
                 {
@@ -47,25 +49,29 @@ public static class DebugLogger
 
                 _logPath = Path.Combine(_logDirectory, "debug.log");
                 
-                // 写入启动标记，使用绝对路径
-                File.AppendAllText(_logPath, $"{Environment.NewLine}>>>> [{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [BOOT] CyanTooth 正在启动...{Environment.NewLine}");
+                // 写入明确的启动绝对路径标记
+                File.AppendAllText(_logPath, $"{Environment.NewLine}>>>> [{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [SYSTEM_BOOT] 日志流已重定向至: {_logPath}{Environment.NewLine}");
             }
             catch (Exception ex)
             {
-                // 最后的防线：尝试写入系统临时目录，绝对不写当前目录
-                try 
+                // 如果 LocalAppData 写入失败，最后的退避方案是 Temp 目录（绝对路径）
+                try
                 {
-                    _logPath = Path.Combine(Path.GetTempPath(), "cyantooth_fallback.log");
-                    File.AppendAllText(_logPath, $"[CRITICAL] 日志系统初始化失败，使用备选路径: {ex.Message}{Environment.NewLine}");
+                    string tempPath = Path.GetTempPath();
+                    _logPath = Path.Combine(tempPath, "cyantooth_emergency.log");
+                    File.AppendAllText(_logPath, $"[CRITICAL_FAILURE] 无法写入系统应用目录，回退至临时目录。错误: {ex.Message}{Environment.NewLine}");
                 }
-                catch { /* 彻底失败则保持 _logPath 为 null */ }
+                catch
+                {
+                    // 如果连 Temp 都写不了，说明环境极度受限
+                    _logPath = null;
+                }
             }
         }
     }
 
     public static void Log(string message, string level = "INFO")
     {
-        if (_logPath == null) Initialize();
         if (_logPath == null) return;
 
         try
@@ -76,15 +82,12 @@ public static class DebugLogger
                 File.AppendAllText(_logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{level.ToUpper()}] {message}{Environment.NewLine}");
             }
         }
-        catch
-        {
-            // 忽略日志写入错误
-        }
+        catch { /* 忽略写入错误 */ }
     }
 
     public static void LogError(string message, Exception? ex = null)
     {
-        string fullMessage = ex != null ? $"{message}{Environment.NewLine}Exception: {ex}" : message;
+        string fullMessage = ex != null ? $"{message}{Environment.NewLine}堆栈信息: {ex}" : message;
         Log(fullMessage, "ERROR");
     }
 
@@ -95,28 +98,18 @@ public static class DebugLogger
         try
         {
             FileInfo fileInfo = new FileInfo(_logPath);
-            if (!fileInfo.Exists || fileInfo.Length < MaxLogSize)
-            {
-                return;
-            }
+            if (!fileInfo.Exists || fileInfo.Length < MaxLogSize) return;
 
             for (int i = MaxArchiveFiles - 1; i >= 1; i--)
             {
                 string oldFile = Path.Combine(_logDirectory, $"debug.{i}.log");
                 string newFile = Path.Combine(_logDirectory, $"debug.{i + 1}.log");
-                if (File.Exists(oldFile))
-                {
-                    File.Move(oldFile, newFile, true);
-                }
+                if (File.Exists(oldFile)) File.Move(oldFile, newFile, true);
             }
 
             string firstArchive = Path.Combine(_logDirectory, "debug.1.log");
             File.Move(_logPath, firstArchive, true);
         }
-        catch
-        {
-            // 滚动失败的处理逻辑
-            try { File.WriteAllText(_logPath, string.Empty); } catch { }
-        }
+        catch { }
     }
 }
