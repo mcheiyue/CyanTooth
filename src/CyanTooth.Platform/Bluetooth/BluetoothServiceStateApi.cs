@@ -46,7 +46,7 @@ public static class BluetoothServiceStateApi
     /// <returns>True if at least one service was successfully disabled</returns>
     public static bool DisconnectAudioDevice(ulong bluetoothAddress)
     {
-        Helpers.DebugLogger.Log($"BluetoothServiceStateApi.DisconnectAudioDevice: MAC={bluetoothAddress:X12}");
+        CyanTooth.Platform.CyanTooth.Platform.Helpers.DebugLogger.Log($"BluetoothServiceStateApi.DisconnectAudioDevice: MAC={bluetoothAddress:X12}");
 
         BLUETOOTH_ADDRESS addr = new BLUETOOTH_ADDRESS { ullLong = bluetoothAddress };
         bool anySuccess = false;
@@ -54,22 +54,22 @@ public static class BluetoothServiceStateApi
         // 1. Disable A2DP (music)
         Guid audioGuid = AudioSinkGuid;
         uint resultA2dp = BluetoothSetServiceState(IntPtr.Zero, ref addr, ref audioGuid, BLUETOOTH_SERVICE_DISABLE);
-        Helpers.DebugLogger.Log($"BluetoothServiceStateApi: A2DP disable result={resultA2dp}");
+        CyanTooth.Platform.CyanTooth.Platform.Helpers.DebugLogger.Log($"BluetoothServiceStateApi: A2DP disable result={resultA2dp}");
         if (resultA2dp == 0) anySuccess = true;
 
         // 2. Disable HFP (calls/microphone)
         Guid hfpGuid = HandsFreeGuid;
         uint resultHfp = BluetoothSetServiceState(IntPtr.Zero, ref addr, ref hfpGuid, BLUETOOTH_SERVICE_DISABLE);
-        Helpers.DebugLogger.Log($"BluetoothServiceStateApi: HFP disable result={resultHfp}");
+        CyanTooth.Platform.CyanTooth.Platform.Helpers.DebugLogger.Log($"BluetoothServiceStateApi: HFP disable result={resultHfp}");
         if (resultHfp == 0) anySuccess = true;
 
         // 3. Also try HSP (some older devices)
         Guid hspGuid = HeadsetGuid;
         uint resultHsp = BluetoothSetServiceState(IntPtr.Zero, ref addr, ref hspGuid, BLUETOOTH_SERVICE_DISABLE);
-        Helpers.DebugLogger.Log($"BluetoothServiceStateApi: HSP disable result={resultHsp}");
+        CyanTooth.Platform.CyanTooth.Platform.Helpers.DebugLogger.Log($"BluetoothServiceStateApi: HSP disable result={resultHsp}");
         if (resultHsp == 0) anySuccess = true;
 
-        Helpers.DebugLogger.Log($"BluetoothServiceStateApi.DisconnectAudioDevice: anySuccess={anySuccess}");
+        CyanTooth.Platform.CyanTooth.Platform.Helpers.DebugLogger.Log($"BluetoothServiceStateApi.DisconnectAudioDevice: anySuccess={anySuccess}");
         return anySuccess;
     }
 
@@ -80,7 +80,7 @@ public static class BluetoothServiceStateApi
     /// <returns>True if at least one service was successfully enabled</returns>
     public static bool ConnectAudioDevice(ulong bluetoothAddress)
     {
-        Helpers.DebugLogger.Log($"BluetoothServiceStateApi.ConnectAudioDevice: MAC={bluetoothAddress:X12}");
+        CyanTooth.Platform.CyanTooth.Platform.Helpers.DebugLogger.Log($"BluetoothServiceStateApi.ConnectAudioDevice: MAC={bluetoothAddress:X12}");
 
         BLUETOOTH_ADDRESS addr = new BLUETOOTH_ADDRESS { ullLong = bluetoothAddress };
         bool anySuccess = false;
@@ -88,22 +88,22 @@ public static class BluetoothServiceStateApi
         // 1. Enable A2DP (music)
         Guid audioGuid = AudioSinkGuid;
         uint resultA2dp = BluetoothSetServiceState(IntPtr.Zero, ref addr, ref audioGuid, BLUETOOTH_SERVICE_ENABLE);
-        Helpers.DebugLogger.Log($"BluetoothServiceStateApi: A2DP enable result={resultA2dp}");
+        CyanTooth.Platform.CyanTooth.Platform.Helpers.DebugLogger.Log($"BluetoothServiceStateApi: A2DP enable result={resultA2dp}");
         if (resultA2dp == 0) anySuccess = true;
 
         // 2. Enable HFP (calls/microphone)
         Guid hfpGuid = HandsFreeGuid;
         uint resultHfp = BluetoothSetServiceState(IntPtr.Zero, ref addr, ref hfpGuid, BLUETOOTH_SERVICE_ENABLE);
-        Helpers.DebugLogger.Log($"BluetoothServiceStateApi: HFP enable result={resultHfp}");
+        CyanTooth.Platform.CyanTooth.Platform.Helpers.DebugLogger.Log($"BluetoothServiceStateApi: HFP enable result={resultHfp}");
         if (resultHfp == 0) anySuccess = true;
 
         // 3. Also try HSP
         Guid hspGuid = HeadsetGuid;
         uint resultHsp = BluetoothSetServiceState(IntPtr.Zero, ref addr, ref hspGuid, BLUETOOTH_SERVICE_ENABLE);
-        Helpers.DebugLogger.Log($"BluetoothServiceStateApi: HSP enable result={resultHsp}");
+        CyanTooth.Platform.CyanTooth.Platform.Helpers.DebugLogger.Log($"BluetoothServiceStateApi: HSP enable result={resultHsp}");
         if (resultHsp == 0) anySuccess = true;
 
-        Helpers.DebugLogger.Log($"BluetoothServiceStateApi.ConnectAudioDevice: anySuccess={anySuccess}");
+        CyanTooth.Platform.CyanTooth.Platform.Helpers.DebugLogger.Log($"BluetoothServiceStateApi.ConnectAudioDevice: anySuccess={anySuccess}");
         return anySuccess;
     }
 }

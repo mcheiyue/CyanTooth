@@ -3,7 +3,7 @@ using System.IO;
 using System.Windows;
 using System.Diagnostics;
 
-namespace CyanTooth.Core.Helpers;
+namespace CyanTooth.Platform.Helpers;
 
 /// <summary>
 /// 生产级线程安全日志器。

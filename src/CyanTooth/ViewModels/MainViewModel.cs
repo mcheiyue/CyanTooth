@@ -127,17 +127,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task ConnectAsync(DeviceViewModel? device)
     {
-        CyanTooth.Core.Helpers.DebugLogger.Log($" MainViewModel.ConnectAsync: device={device?.Name ?? "null"}, Id={device?.Id ?? "null"}");
+        CyanTooth.Core.CyanTooth.Platform.CyanTooth.Platform.Helpers.DebugLogger.Log($" MainViewModel.ConnectAsync: device={device?.Name ?? "null"}, Id={device?.Id ?? "null"}");
         if (device == null) return;
         device.IsOperating = true;
         try
         {
             var result = await _bluetoothService.ConnectAsync(device.Id);
-            CyanTooth.Core.Helpers.DebugLogger.Log($" MainViewModel.ConnectAsync: result={result}");
+            CyanTooth.Core.CyanTooth.Platform.CyanTooth.Platform.Helpers.DebugLogger.Log($" MainViewModel.ConnectAsync: result={result}");
         }
         catch (Exception ex)
         {
-            CyanTooth.Core.Helpers.DebugLogger.Log($" MainViewModel.ConnectAsync: EXCEPTION={ex.Message}");
+            CyanTooth.Core.CyanTooth.Platform.CyanTooth.Platform.Helpers.DebugLogger.Log($" MainViewModel.ConnectAsync: EXCEPTION={ex.Message}");
         }
         finally
         {
@@ -148,17 +148,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task DisconnectAsync(DeviceViewModel? device)
     {
-        CyanTooth.Core.Helpers.DebugLogger.Log($" MainViewModel.DisconnectAsync: device={device?.Name ?? "null"}, Id={device?.Id ?? "null"}");
+        CyanTooth.Core.CyanTooth.Platform.CyanTooth.Platform.Helpers.DebugLogger.Log($" MainViewModel.DisconnectAsync: device={device?.Name ?? "null"}, Id={device?.Id ?? "null"}");
         if (device == null) return;
         device.IsOperating = true;
         try
         {
             var result = await _bluetoothService.DisconnectAsync(device.Id);
-            CyanTooth.Core.Helpers.DebugLogger.Log($" MainViewModel.DisconnectAsync: result={result}");
+            CyanTooth.Core.CyanTooth.Platform.CyanTooth.Platform.Helpers.DebugLogger.Log($" MainViewModel.DisconnectAsync: result={result}");
         }
         catch (Exception ex)
         {
-            CyanTooth.Core.Helpers.DebugLogger.Log($" MainViewModel.DisconnectAsync: EXCEPTION={ex.Message}");
+            CyanTooth.Core.CyanTooth.Platform.CyanTooth.Platform.Helpers.DebugLogger.Log($" MainViewModel.DisconnectAsync: EXCEPTION={ex.Message}");
         }
         finally
         {
@@ -170,7 +170,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private async Task ToggleConnectionAsync(DeviceViewModel? device)
     {
         System.Diagnostics.Debug.WriteLine($"[DEBUG] ToggleConnectionAsync called, device={device?.Name ?? "null"}");
-        CyanTooth.Core.Helpers.DebugLogger.Log($" ToggleConnectionAsync: device={device?.Name ?? "null"}, IsConnected={device?.IsConnected}");
+        CyanTooth.Core.CyanTooth.Platform.CyanTooth.Platform.Helpers.DebugLogger.Log($" ToggleConnectionAsync: device={device?.Name ?? "null"}, IsConnected={device?.IsConnected}");
         
         if (device == null) return;
         if (device.IsConnected)
