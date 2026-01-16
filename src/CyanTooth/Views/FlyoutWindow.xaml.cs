@@ -11,14 +11,19 @@ public partial class FlyoutWindow : Wpf.Ui.Controls.FluentWindow
 {
     public FlyoutWindow()
     {
+        DebugLogger.Log("FlyoutWindow: 正在初始化...");
         try
         {
-            System.IO.File.AppendAllText("crash.log", $"[{DateTime.Now}] FlyoutWindow: Before InitializeComponent\n");
             InitializeComponent();
-            System.IO.File.AppendAllText("crash.log", $"[{DateTime.Now}] FlyoutWindow: After InitializeComponent\n");
-            DataContext = App.Current.Services.GetService(typeof(MainViewModel));
-            System.IO.File.AppendAllText("crash.log", $"[{DateTime.Now}] FlyoutWindow: DataContext set\n");
+            DataContext = App.Current.Services.GetRequiredService<MainViewModel>();
+            DebugLogger.Log("FlyoutWindow: 初始化完成。");
         }
+        catch (Exception ex)
+        {
+            DebugLogger.LogError("FlyoutWindow 初始化失败", ex);
+            throw;
+        }
+    }
         catch (Exception ex)
         {
             System.IO.File.AppendAllText("crash.log", $"[{DateTime.Now}] FlyoutWindow CRASH:\n{ex}\n");

@@ -11,14 +11,19 @@ public partial class SettingsWindow : Wpf.Ui.Controls.FluentWindow
 {
     public SettingsWindow()
     {
+        DebugLogger.Log("SettingsWindow: 正在初始化...");
         try
         {
-            System.IO.File.AppendAllText("crash.log", $"[{DateTime.Now}] SettingsWindow: Before InitializeComponent\n");
             InitializeComponent();
-            System.IO.File.AppendAllText("crash.log", $"[{DateTime.Now}] SettingsWindow: After InitializeComponent\n");
-            DataContext = App.Current.Services.GetService(typeof(SettingsViewModel));
-            System.IO.File.AppendAllText("crash.log", $"[{DateTime.Now}] SettingsWindow: DataContext set\n");
+            DataContext = App.Current.Services.GetRequiredService<SettingsViewModel>();
+            DebugLogger.Log("SettingsWindow: 初始化完成。");
         }
+        catch (Exception ex)
+        {
+            DebugLogger.LogError("SettingsWindow 初始化失败", ex);
+            throw;
+        }
+    }
         catch (Exception ex)
         {
             System.IO.File.AppendAllText("crash.log", $"[{DateTime.Now}] SettingsWindow CRASH:\n{ex}\n");
