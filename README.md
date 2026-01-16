@@ -62,33 +62,33 @@ CyanTooth 是一款专为 Windows 10/11 设计的现代化蓝牙音频设备管�
 1. **克隆仓库**
    ```bash
    git clone https://github.com/yourusername/CyanTooth.git
-   cd CyanTooth
-   ```
+    cd CyanTooth
+    ```
 
-2. **还原依赖**
-   ```bash
-   dotnet restore
-   ```
+3. **还原依赖**
+    ```bash
+    dotnet restore
+    ```
 
-3. **构建项目**
-   ```bash
-   dotnet build
-   ```
+4. **构建项目**
+    ```bash
+    dotnet build
+    ```
 
-4. **运行**
-   ```bash
-   cd src/BluetoothManager
-   dotnet run
-   ```
+5. **运行**
+    ```bash
+    cd src/CyanTooth
+    dotnet run
+    ```
 
 ## 📂 项目结构
 
 ```
 CyanTooth/
 ├── src/                          # 源代码目录
-│   ├── BluetoothManager/         # 主程序 (WPF UI)
-│   ├── BluetoothManager.Core/    # 核心业务逻辑
-│   └── BluetoothManager.Platform/# 平台 API 封装
+│   ├── CyanTooth/                # 主程序 (WPF UI)
+│   ├── CyanTooth.Core/           # 核心业务逻辑
+│   └── CyanTooth.Platform/       # 平台 API 封装
 ├── docs/                         # 项目文档
 │   └── ARCHITECTURE.md           # 架构设计文档
 └── tests/                        # 测试项目
