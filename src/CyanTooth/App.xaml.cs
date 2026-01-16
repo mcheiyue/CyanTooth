@@ -8,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using CyanTooth.Core.Services;
 using CyanTooth.ViewModels;
 using Wpf.Ui.Appearance;
+using System.Collections.Generic;
 
 namespace CyanTooth;
 
@@ -25,19 +26,16 @@ public partial class App : System.Windows.Application
 
     public App()
     {
-        DebugLogger.Log("App 构造函数开始执行");
-        // Global exception handlers
+        // 第一步：立即挂载异常处理器，不执行任何逻辑
         AppDomain.CurrentDomain.UnhandledException += (s, e) =>
         {
             var ex = e.ExceptionObject as Exception;
-            DebugLogger.LogError("[UnhandledException] 致命错误", ex);
-            System.Windows.MessageBox.Show($"致命错误:\n{ex?.Message}\n\n请在 AppData 目录中查看日志获取详细信息。", "程序崩溃", MessageBoxButton.OK, MessageBoxImage.Error);
+            HandleFatalException(ex, "UnhandledException");
         };
         
         DispatcherUnhandledException += (s, e) =>
         {
-            DebugLogger.LogError("[DispatcherUnhandledException] UI 线程错误", e.Exception);
-            System.Windows.MessageBox.Show($"UI 错误:\n{e.Exception.Message}\n\n请在 AppData 目录中查看日志获取详细信息。", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            HandleFatalException(e.Exception, "DispatcherUnhandledException");
             e.Handled = true;
         };
         
@@ -47,6 +45,10 @@ public partial class App : System.Windows.Application
             e.SetObserved();
         };
 
+        // 第二步：初始化日志系统
+        DebugLogger.Initialize();
+        DebugLogger.Log("App 构造函数开始执行");
+
         try
         {
             DebugLogger.Log("正在构建 Host...");
@@ -54,12 +56,9 @@ public partial class App : System.Windows.Application
                 .ConfigureServices((context, services) =>
                 {
                     DebugLogger.Log("正在配置服务依赖注入...");
-                    // Core Services
                     services.AddSingleton<ConfigService>();
                     services.AddSingleton<BluetoothService>();
                     services.AddSingleton<NotificationService>();
-
-                    // ViewModels
                     services.AddSingleton<MainViewModel>();
                     services.AddTransient<SettingsViewModel>();
                     services.AddSingleton<TrayIconViewModel>();
@@ -69,8 +68,23 @@ public partial class App : System.Windows.Application
         }
         catch (Exception ex)
         {
-            DebugLogger.LogError("Host 构建失败", ex);
+            HandleFatalException(ex, "Host构建阶段");
             throw;
+        }
+    }
+
+    private void HandleFatalException(Exception? ex, string source)
+    {
+        string msg = ex?.Message ?? "未知错误";
+        DebugLogger.LogError($"[{source}] 致命错误: {msg}", ex);
+        
+        // 确保在闪退前给用户提示
+        MessageBox.Show($"程序发生异常 ({source}):\n{msg}\n\n详细日志请查看: %LocalAppData%\\CyanTooth\\logs\\debug.log", 
+                        "CyanTooth 错误", MessageBoxButton.OK, MessageBoxImage.Error);
+        
+        if (source != "DispatcherUnhandledException")
+        {
+            Environment.Exit(1);
         }
     }
 
@@ -85,24 +99,18 @@ public partial class App : System.Windows.Application
 
             base.OnStartup(e);
 
-            // Apply theme based on settings
             DebugLogger.Log("正在获取配置并应用主题...");
             var configService = Services.GetRequiredService<ConfigService>();
             ApplyTheme(configService.Settings.Theme);
 
-            // Initialize Bluetooth service
             DebugLogger.Log("正在初始化蓝牙服务...");
             var bluetoothService = Services.GetRequiredService<BluetoothService>();
             var mainViewModel = Services.GetRequiredService<MainViewModel>();
             mainViewModel.Initialize();
-            DebugLogger.Log("蓝牙服务初始化完成");
 
-            // Create tray icon
             DebugLogger.Log("正在创建托盘图标...");
             CreateTrayIcon();
-            DebugLogger.Log("托盘图标创建完成");
 
-            // Check if started with --minimized flag
             bool startMinimized = e.Args.Contains("--minimized") || configService.Settings.StartMinimized;
             DebugLogger.Log($"启动模式: {(startMinimized ? "最小化" : "标准")}");
 
@@ -112,54 +120,55 @@ public partial class App : System.Windows.Application
                 ShowFlyout();
             }
             
-            DebugLogger.Log("OnStartup 执行完毕，程序进入空闲循环");
+            DebugLogger.Log("程序进入空闲循环");
         }
         catch (Exception ex)
         {
-            DebugLogger.LogError("启动过程中发生异常", ex);
-            System.Windows.MessageBox.Show($"启动失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            HandleFatalException(ex, "Startup阶段");
             Shutdown();
         }
     }
 
     protected override async void OnExit(ExitEventArgs e)
     {
+        DebugLogger.Log("程序正在退出...");
         _trayIcon?.Dispose();
-        
-        var bluetoothService = Services.GetRequiredService<BluetoothService>();
-        bluetoothService.Dispose();
-
+        var bluetoothService = Services.GetService<BluetoothService>();
+        bluetoothService?.Dispose();
         await _host.StopAsync();
         _host.Dispose();
-
         base.OnExit(e);
     }
 
     private void CreateTrayIcon()
     {
-        // Load icon from embedded resource
-        var iconUri = new Uri("pack://application:,,,/Resources/Icons/tray.ico");
-        var iconStream = System.Windows.Application.GetResourceStream(iconUri)?.Stream;
-        
-        _trayIcon = new Hardcodet.Wpf.TaskbarNotification.TaskbarIcon
+        try
         {
-            Icon = iconStream != null ? new System.Drawing.Icon(iconStream) : System.Drawing.SystemIcons.Application,
-            ToolTipText = "CyanTooth",
-            ContextMenu = CreateContextMenu()
-        };
+            var iconUri = new Uri("pack://application:,,,/Resources/Icons/tray.ico");
+            var iconStream = System.Windows.Application.GetResourceStream(iconUri)?.Stream;
+            
+            _trayIcon = new Hardcodet.Wpf.TaskbarNotification.TaskbarIcon
+            {
+                Icon = iconStream != null ? new System.Drawing.Icon(iconStream) : System.Drawing.SystemIcons.Application,
+                ToolTipText = "CyanTooth",
+                ContextMenu = CreateContextMenu()
+            };
 
-        _trayIcon.TrayMouseDoubleClick += (s, e) => ShowFlyout();
-        _trayIcon.TrayLeftMouseUp += (s, e) => ShowFlyout();
+            _trayIcon.TrayMouseDoubleClick += (s, e) => ShowFlyout();
+            _trayIcon.TrayLeftMouseUp += (s, e) => ShowFlyout();
 
-        // Update tooltip with device info
-        var trayViewModel = Services.GetRequiredService<TrayIconViewModel>();
-        _trayIcon.DataContext = trayViewModel;
+            var trayViewModel = Services.GetRequiredService<TrayIconViewModel>();
+            _trayIcon.DataContext = trayViewModel;
+        }
+        catch (Exception ex)
+        {
+            DebugLogger.LogError("创建托盘图标失败", ex);
+        }
     }
 
     private System.Windows.Controls.ContextMenu CreateContextMenu()
     {
         var menu = new System.Windows.Controls.ContextMenu();
-
         var openItem = new System.Windows.Controls.MenuItem { Header = "打开" };
         openItem.Click += (s, e) => ShowFlyout();
         menu.Items.Add(openItem);
@@ -193,12 +202,9 @@ public partial class App : System.Windows.Application
     {
         try
         {
-            System.Diagnostics.Debug.WriteLine("[DEBUG] ShowFlyout called");
             if (_flyoutWindow == null || !_flyoutWindow.IsLoaded)
             {
-                System.Diagnostics.Debug.WriteLine("[DEBUG] Creating new FlyoutWindow");
                 _flyoutWindow = new Views.FlyoutWindow();
-                System.Diagnostics.Debug.WriteLine("[DEBUG] FlyoutWindow created successfully");
             }
 
             if (_flyoutWindow.IsVisible)
@@ -207,21 +213,15 @@ public partial class App : System.Windows.Application
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine("[DEBUG] Positioning FlyoutWindow");
                 PositionFlyoutWindow(_flyoutWindow);
-                System.Diagnostics.Debug.WriteLine("[DEBUG] Showing FlyoutWindow");
                 _flyoutWindow.Show();
                 _flyoutWindow.Activate();
-                System.Diagnostics.Debug.WriteLine("[DEBUG] FlyoutWindow shown");
             }
         }
         catch (Exception ex)
         {
-            if (ex is not null)
-            {
-                System.Diagnostics.Debug.WriteLine($"[ERROR] ShowFlyout failed: {ex}");
-                System.Windows.MessageBox.Show($"ShowFlyout 错误:\n{ex.Message}\n\n{ex.StackTrace}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            DebugLogger.LogError("显示 Flyout 失败", ex);
+            MessageBox.Show($"显示 Flyout 失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -229,20 +229,14 @@ public partial class App : System.Windows.Application
     {
         try
         {
-            System.Diagnostics.Debug.WriteLine("[DEBUG] ShowSettings called");
             var settingsWindow = new Views.SettingsWindow();
-            System.Diagnostics.Debug.WriteLine("[DEBUG] SettingsWindow created");
             settingsWindow.Show();
             settingsWindow.Activate();
-            System.Diagnostics.Debug.WriteLine("[DEBUG] SettingsWindow shown");
         }
         catch (Exception ex)
         {
-            if (ex is not null)
-            {
-                System.Diagnostics.Debug.WriteLine($"[ERROR] ShowSettings failed: {ex}");
-                System.Windows.MessageBox.Show($"ShowSettings 错误:\n{ex.Message}\n\n{ex.StackTrace}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            DebugLogger.LogError("显示设置窗口失败", ex);
+            MessageBox.Show($"显示设置窗口失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -256,9 +250,9 @@ public partial class App : System.Windows.Application
                 UseShellExecute = true
             });
         }
-        catch
+        catch (Exception ex)
         {
-            // Ignore errors
+            DebugLogger.LogError("打开系统蓝牙设置失败", ex);
         }
     }
 
@@ -280,7 +274,6 @@ public partial class App : System.Windows.Application
 
         if (targetTheme == ApplicationTheme.Unknown)
         {
-            // Use system theme
             ApplicationThemeManager.ApplySystemTheme();
         }
         else

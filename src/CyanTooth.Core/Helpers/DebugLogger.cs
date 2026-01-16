@@ -4,45 +4,70 @@ using System.IO;
 namespace CyanTooth.Core.Helpers;
 
 /// <summary>
-/// 增强的线程安全日志器，支持 AppData 存储和简单的日志滚动
+/// 增强的线程安全日志器，支持 AppData 存储和简单的日志滚动。
+/// 严格禁止向程序运行目录写入日志，确保在单文件打包模式下的路径稳定性。
 /// </summary>
 public static class DebugLogger
 {
     private static readonly object _lock = new();
-    private static readonly string _logDirectory = string.Empty;
-    private static readonly string _logPath = "debug.log";
+    private static string? _logDirectory;
+    private static string? _logPath;
     private const long MaxLogSize = 10 * 1024 * 1024; // 10MB
     private const int MaxArchiveFiles = 5;
 
     static DebugLogger()
     {
-        try
-        {
-            // 强制统一使用 LocalApplicationData
-            string appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            _logDirectory = Path.Combine(appData, "CyanTooth", "logs");
-            
-            if (!Directory.Exists(_logDirectory))
-            {
-                Directory.CreateDirectory(_logDirectory);
-            }
+        Initialize();
+    }
 
-            _logPath = Path.Combine(_logDirectory, "debug.log");
-            
-            // 启动时立即尝试写入，不留空白期
-            File.AppendAllText(_logPath, $"{Environment.NewLine}>>>> [{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [STARTUP] CyanTooth 启动初始化...{Environment.NewLine}");
-            Log("日志引擎准备就绪。");
-        }
-        catch (Exception ex)
+    public static void Initialize()
+    {
+        if (_logPath != null) return;
+
+        lock (_lock)
         {
-            // 最后的防线
-            _logPath = "debug_fallback.log";
-            try { File.AppendAllText(_logPath, $"日志初始化失败: {ex.Message}"); } catch { }
+            if (_logPath != null) return;
+
+            try
+            {
+                // 统一使用 LocalApplicationData (%LocalAppData%)
+                string appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                if (string.IsNullOrEmpty(appData))
+                {
+                    // 极端备选：系统临时目录
+                    appData = Path.GetTempPath();
+                }
+
+                _logDirectory = Path.Combine(appData, "CyanTooth", "logs");
+                
+                if (!Directory.Exists(_logDirectory))
+                {
+                    Directory.CreateDirectory(_logDirectory);
+                }
+
+                _logPath = Path.Combine(_logDirectory, "debug.log");
+                
+                // 写入启动标记，使用绝对路径
+                File.AppendAllText(_logPath, $"{Environment.NewLine}>>>> [{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [BOOT] CyanTooth 正在启动...{Environment.NewLine}");
+            }
+            catch (Exception ex)
+            {
+                // 最后的防线：尝试写入系统临时目录，绝对不写当前目录
+                try 
+                {
+                    _logPath = Path.Combine(Path.GetTempPath(), "cyantooth_fallback.log");
+                    File.AppendAllText(_logPath, $"[CRITICAL] 日志系统初始化失败，使用备选路径: {ex.Message}{Environment.NewLine}");
+                }
+                catch { /* 彻底失败则保持 _logPath 为 null */ }
+            }
         }
     }
 
     public static void Log(string message, string level = "INFO")
     {
+        if (_logPath == null) Initialize();
+        if (_logPath == null) return;
+
         try
         {
             lock (_lock)
@@ -65,6 +90,8 @@ public static class DebugLogger
 
     private static void RotateLogFilesIfNeeded()
     {
+        if (_logPath == null || _logDirectory == null) return;
+
         try
         {
             FileInfo fileInfo = new FileInfo(_logPath);
@@ -73,7 +100,6 @@ public static class DebugLogger
                 return;
             }
 
-            // 滚动旧日志: debug.4.log -> debug.5.log, ..., debug.log -> debug.1.log
             for (int i = MaxArchiveFiles - 1; i >= 1; i--)
             {
                 string oldFile = Path.Combine(_logDirectory, $"debug.{i}.log");
@@ -89,7 +115,7 @@ public static class DebugLogger
         }
         catch
         {
-            // 滚动失败则继续写入当前文件或清空
+            // 滚动失败的处理逻辑
             try { File.WriteAllText(_logPath, string.Empty); } catch { }
         }
     }
