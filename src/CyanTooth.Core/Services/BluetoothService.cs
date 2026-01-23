@@ -287,8 +287,10 @@ public class BluetoothService : IDisposable
         var audioEndpoints = _audioEnumerator.FindEndpointsByMacAddress(e.Address, device.Name);
         device.IsAudioDevice = audioEndpoints.Any();
 
-        // Determine category from name (simplified)
-        device.Category = DetermineCategory(device.Name);
+        device.ClassOfDevice = e.ClassOfDevice;
+
+        // Determine category using Name, CoD, and Audio status
+        device.Category = DetermineCategory(device.Name, device.ClassOfDevice, device.IsAudioDevice);
 
         _devices[e.DeviceId] = device;
 
@@ -368,29 +370,103 @@ public class BluetoothService : IDisposable
         }
     }
 
-    private static DeviceCategory DetermineCategory(string name)
+    private static DeviceCategory DetermineCategory(string name, uint cod, bool isAudioDevice)
     {
+        // Debug Log: Output raw CoD for analysis
+        DebugLogger.Log($"[DeviceCategory] Determine for '{name}': CoD=0x{cod:X}, IsAudio={isAudioDevice}");
+
+        // 1. Try CoD (Class of Device) first if available (non-zero)
+        if (cod != 0)
+        {
+            // Major Device Class (bits 8-12)
+            var majorClass = (cod >> 8) & 0x1F;
+            // Minor Device Class (bits 2-7)
+            var minorClass = (cod >> 2) & 0x3F;
+
+            // Audio/Video
+            if (majorClass == 0x04)
+            {
+                // Check Minor Class
+                if (minorClass == 0x01) return DeviceCategory.Headphones; // Wearable Headset
+                if (minorClass == 0x02) return DeviceCategory.Headphones; // Hands-free
+                if (minorClass == 0x04) return DeviceCategory.Other;      // Microphone (treat as Other or specific Mic category if we had one)
+                if (minorClass == 0x05) return DeviceCategory.Speaker;    // Loudspeaker
+                if (minorClass == 0x06) return DeviceCategory.Headphones; // Headphones
+                if (minorClass == 0x07) return DeviceCategory.Speaker;    // Portable Audio (often speakers)
+                if (minorClass == 0x08) return DeviceCategory.Speaker;    // Car Audio
+                
+                return DeviceCategory.Speaker; // Default A/V to Speaker if unsure
+            }
+            
+            // Computer
+            if (majorClass == 0x01) return DeviceCategory.Computer;
+            
+            // Phone
+            if (majorClass == 0x02) return DeviceCategory.Phone;
+            
+            // Peripheral (Keyboard/Mouse/Gamepad)
+            if (majorClass == 0x05)
+            {
+                // Bits 6,7 of Minor Class indicate type in Peripheral Major Class?
+                // Actually Peripheral uses bits 6,7 for Mouse/Keyboard interaction
+                // Bit 6: Keyboard, Bit 7: Pointing device
+                var isKeyboard = (minorClass & 0x10) != 0; // Bit 4 in partial map, check full spec
+                // Let's stick to simpler logic or name fallback for peripherals as CoD is tricky there
+                
+                // Keyboard (0x10)
+                if ((cod & 0x0040) != 0) return DeviceCategory.Keyboard;
+                // Mouse (0x20)
+                if ((cod & 0x0080) != 0) return DeviceCategory.Mouse;
+                
+                // Gamepad (Joystick/Gamepad) - specific minor classes
+                if ((minorClass & 0x01) != 0) return DeviceCategory.Gamepad; // Joystick
+                if ((minorClass & 0x02) != 0) return DeviceCategory.Gamepad; // Gamepad
+            }
+
+            // Wearable
+            if (majorClass == 0x07) return DeviceCategory.Watch;
+            
+            // Health
+            if (majorClass == 0x09) return DeviceCategory.HealthDevice;
+        }
+
+        // 2. Fallback to name matching
         var lowerName = name.ToLowerInvariant();
 
-        if (lowerName.Contains("airpods") || lowerName.Contains("earbuds") || lowerName.Contains("buds"))
-            return DeviceCategory.Earbuds;
-        if (lowerName.Contains("headphone") || lowerName.Contains("headset") || lowerName.Contains("wh-") || lowerName.Contains("qc"))
-            return DeviceCategory.Headphones;
-        if (lowerName.Contains("speaker") || lowerName.Contains("soundlink") || lowerName.Contains("jbl"))
-            return DeviceCategory.Speaker;
-        if (lowerName.Contains("keyboard"))
-            return DeviceCategory.Keyboard;
-        if (lowerName.Contains("mouse") || lowerName.Contains("mx master"))
-            return DeviceCategory.Mouse;
+        if (lowerName.Contains("phone") || lowerName.Contains("iphone") || lowerName.Contains("android")) return DeviceCategory.Phone;
+        if (lowerName.Contains("pc") || lowerName.Contains("laptop") || lowerName.Contains("computer") || lowerName.Contains("desktop")) return DeviceCategory.Computer;
+        
+        // Gamepad/Controller keywords - Check BEFORE Speaker to avoid "Xbox" matching "box" in Speaker
         if (lowerName.Contains("controller") || lowerName.Contains("gamepad") || lowerName.Contains("xbox") || lowerName.Contains("dualsense"))
             return DeviceCategory.Gamepad;
-        if (lowerName.Contains("phone") || lowerName.Contains("iphone") || lowerName.Contains("galaxy"))
-            return DeviceCategory.Phone;
-        if (lowerName.Contains("watch"))
-            return DeviceCategory.Watch;
+
+        // Headphones keywords
+        if (lowerName.Contains("headphone") || lowerName.Contains("headset") || 
+            lowerName.Contains("bud") || lowerName.Contains("pod") || 
+            lowerName.Contains("air") || lowerName.Contains("enco") || 
+            lowerName.Contains("free") || lowerName.Contains("sono") || 
+            lowerName.Contains("music") || lowerName.Contains("audio")) return DeviceCategory.Headphones;
+        
+        // Speaker keywords
+        if (lowerName.Contains("speaker") || lowerName.Contains("sound") || lowerName.Contains("box")) return DeviceCategory.Speaker;
+
+        // Watch/Band keywords
+        if (lowerName.Contains("watch") || lowerName.Contains("band") || lowerName.Contains("strap") || lowerName.Contains("wear")) return DeviceCategory.Watch;
+        
+        // Input devices
+        if (lowerName.Contains("key") || lowerName.Contains("board")) return DeviceCategory.Keyboard;
+        if (lowerName.Contains("mouse") || lowerName.Contains("mice") || lowerName.Contains("track")) return DeviceCategory.Mouse;
+
+        // 3. Fallback: If it's identified as an audio endpoint but we couldn't determine type, default to Headphones
+        if (isAudioDevice)
+        {
+            return DeviceCategory.Headphones;
+        }
 
         return DeviceCategory.Other;
     }
+
+
 
     public void Dispose()
     {

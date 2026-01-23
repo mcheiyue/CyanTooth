@@ -58,7 +58,7 @@ public partial class DeviceViewModel : ObservableObject
         DeviceCategory.Gamepad => "\uE7FC",      // Gamepad icon
         DeviceCategory.Phone => "\uE8EA",        // Phone icon
         DeviceCategory.Computer => "\uE7F8",     // Computer icon
-        DeviceCategory.Watch => "\uE916",        // Watch icon
+        DeviceCategory.Watch => "\uE9A8",        // DeviceWearable (SmartWatch style)
         _ => "\uE702"                            // Bluetooth icon
     };
 
