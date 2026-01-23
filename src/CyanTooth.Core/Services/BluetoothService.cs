@@ -28,7 +28,7 @@ public class BluetoothService : IDisposable
     public event EventHandler<DeviceBatteryChangedEventArgs>? DeviceBatteryChanged;
     public event EventHandler<Events.DeviceDiscoveredEventArgs>? DeviceDiscovered;
     public event EventHandler<DeviceRemovedEventArgs>? DeviceRemoved;
-    public event EventHandler? DevicesRefreshed;
+    // public event EventHandler? DevicesRefreshed;
 
     public IReadOnlyDictionary<string, BluetoothDevice> Devices => _devices;
 

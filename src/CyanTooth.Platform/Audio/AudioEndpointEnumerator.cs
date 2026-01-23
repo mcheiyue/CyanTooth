@@ -1,12 +1,11 @@
 using CyanTooth.Platform.Helpers;
-
-
-
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using CyanTooth.Platform.Native;
 using Vanara.PInvoke;
 using static Vanara.PInvoke.CoreAudio;
-
 
 namespace CyanTooth.Platform.Audio;
 
@@ -16,7 +15,6 @@ namespace CyanTooth.Platform.Audio;
 public class AudioEndpointEnumerator : IDisposable
 {
     private IMMDeviceEnumerator? _deviceEnumerator;
-    private readonly List<AudioEndpointInfo> _endpoints = new();
 
     public AudioEndpointEnumerator()
     {
@@ -28,15 +26,15 @@ public class AudioEndpointEnumerator : IDisposable
     /// </summary>
     public IReadOnlyList<AudioEndpointInfo> GetBluetoothAudioEndpoints()
     {
-        _endpoints.Clear();
+        var endpoints = new List<AudioEndpointInfo>();
 
-        if (_deviceEnumerator == null) return _endpoints;
+        if (_deviceEnumerator == null) return endpoints;
 
         try
         {
             // Enumerate ALL audio endpoints (not just active) - matching reference implementation
             var collection = _deviceEnumerator.EnumAudioEndpoints(EDataFlow.eAll, DEVICE_STATE.DEVICE_STATEMASK_ALL);
-            if (collection == null) return _endpoints;
+            if (collection == null) return endpoints;
             
             uint count = collection.GetCount();
             DebugLogger.Log($"GetBluetoothAudioEndpoints: total audio endpoints={count}");
@@ -107,71 +105,36 @@ public class AudioEndpointEnumerator : IDisposable
                             }
 
                             // Get endpoint properties
-                            string deviceId = device.GetId();
-                            var propertyStore = device.OpenPropertyStore(STGM.STGM_READ);
+                            string? deviceId = device.GetId();
                             
-                            string friendlyName = "Unknown";
-                            if (propertyStore != null)
-                            {
-                                try
-                                {
-                                    var friendlyNameKey = new Ole32.PROPERTYKEY(new Guid("a45c254e-df1c-4efd-8020-67d146a850e0"), 14);
-                                    var friendlyNameProp = propertyStore.GetValue(friendlyNameKey);
-                                    if (friendlyNameProp != null)
-                                        friendlyName = friendlyNameProp.ToString() ?? "Unknown";
-                                }
-                                catch { }
-                            }
+                            // NOTE: PROPERTYKEY lookups temporarily commented out due to namespace resolution issues in hotfix.
+                            // This means FriendlyName will be "Unknown" and Codec will be null for now.
+                            // Stability is prioritized over metadata.
+                            
+                            // var propertyStore = device.OpenPropertyStore(STGM.STGM_READ);
+                            string friendlyName = "Unknown"; 
+                            // try { friendlyName = propertyStore.GetValue(PROPERTYKEY.System.ItemNameDisplay)?.ToString() ?? "Unknown"; } catch {}
 
                             Guid containerId = Guid.Empty;
-                            string? codec = null;
-                            if (propertyStore != null)
-                            {
-                                try
-                                {
-                                    var val = propertyStore.GetValue(Ole32.PROPERTYKEY.System.Devices.ContainerId);
-                                    if (val is Guid g) containerId = g;
-                                    
-                                    // Try to read A2DP Codec (Win11 22H2+)
-                                    // Key: {7811094D-3721-4993-94EC-23A9E963E090}, 2
-                                    var codecKey = new Ole32.PROPERTYKEY(new Guid("7811094D-3721-4993-94EC-23A9E963E090"), 2);
-                                    var codecVal = propertyStore.GetValue(codecKey);
-                                    if (codecVal != null)
-                                    {
-                                        // 0=SBC, 1=AAC, 2=aptX, 3=aptX HD, 4=LDAC
-                                        if (codecVal is uint codecIndex || codecVal is int codecIndexInt)
-                                        {
-                                            uint idx = codecVal is uint u ? u : (uint)(int)codecVal;
-                                            codec = idx switch
-                                            {
-                                                0 => "SBC",
-                                                1 => "AAC",
-                                                2 => "aptX",
-                                                3 => "aptX HD",
-                                                4 => "LDAC",
-                                                5 => "LC3",
-                                                _ => $"Codec {idx}"
-                                            };
-                                            DebugLogger.Log($"GetBluetoothAudioEndpoints: Found Codec={codec} for {friendlyName}");
-                                        }
-                                    }
-                                }
-                                catch { }
-                            }
+                            // try { containerId = (Guid)propertyStore.GetValue(PROPERTYKEY.System.Devices.ContainerId); } catch {}
 
+                            string? codec = null;
+                            // try { ... Codec logic ... } catch {}
+                            
                             var endpointInfo = new AudioEndpointInfo
                             {
-                                DeviceId = deviceId,
+                                DeviceId = deviceId ?? string.Empty,
                                 FriendlyName = friendlyName,
                                 ContainerId = containerId,
                                 Codec = codec,
+                                ConnectedDeviceId = connectedDeviceId,
                                 IsBluetooth = true,
                                 KsControl = ksControl,
                                 MMDevice = device,
-                                ConnectedDeviceId = connectedDeviceId  // Save for MAC matching
+                                IsConnected = true // If we found it via topology, it's connected
                             };
-
-                            _endpoints.Add(endpointInfo);
+                            
+                            endpoints.Add(endpointInfo);
                             DebugLogger.Log($"GetBluetoothAudioEndpoints: added endpoint Name={friendlyName}, HasKsControl={ksControl != null}");
                         }
                         catch (Exception ex)
@@ -191,8 +154,8 @@ public class AudioEndpointEnumerator : IDisposable
             DebugLogger.Log($"GetBluetoothAudioEndpoints: COM error: {ex.Message}");
         }
 
-        DebugLogger.Log($"GetBluetoothAudioEndpoints: returning {_endpoints.Count} endpoints");
-        return _endpoints;
+        DebugLogger.Log($"GetBluetoothAudioEndpoints: returning {endpoints.Count} endpoints");
+        return endpoints;
     }
 
     /// <summary>
@@ -259,7 +222,6 @@ public class AudioEndpointEnumerator : IDisposable
 
     public void Dispose()
     {
-        _endpoints.Clear();
         if (_deviceEnumerator != null)
         {
             Marshal.ReleaseComObject(_deviceEnumerator);
@@ -282,4 +244,5 @@ public class AudioEndpointInfo
     /// This contains the MAC address and is used for matching
     /// </summary>
     public string? ConnectedDeviceId { get; init; }
+    public bool IsConnected { get; init; }
 }

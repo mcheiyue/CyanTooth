@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         configuration: [Debug, Release]
-        platform: [x64, ARM64]
+        platform: [x64, arm64]
     
     steps:
     - name: 检出代码
