@@ -68,6 +68,12 @@ public partial class BluetoothDevice : ObservableObject
     private bool _isAudioDevice;
 
     /// <summary>
+    /// Current audio codec (SBC, AAC, AptX, etc.) - Windows 11 22H2+ only
+    /// </summary>
+    [ObservableProperty]
+    private string? _audioCodec;
+
+    /// <summary>
     /// Bluetooth Class of Device (CoD)
     /// </summary>
     [ObservableProperty]

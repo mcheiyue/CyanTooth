@@ -36,6 +36,9 @@ public partial class DeviceViewModel : ObservableObject
     private bool _isAudioDevice;
 
     [ObservableProperty]
+    private string? _audioCodec;
+
+    [ObservableProperty]
     private bool _isFavorite;
 
     [ObservableProperty]
@@ -88,6 +91,7 @@ public partial class DeviceViewModel : ObservableObject
         _isPaired = device.IsPaired;
         _batteryLevel = device.BatteryLevel;
         _isAudioDevice = device.IsAudioDevice;
+        _audioCodec = device.AudioCodec;
         _lastSeen = device.LastSeen;
     }
 

@@ -284,8 +284,17 @@ public class BluetoothService : IDisposable
         };
 
         // Check if this is an audio device (including Hands-Free endpoints by name)
-        var audioEndpoints = _audioEnumerator.FindEndpointsByMacAddress(e.Address, device.Name);
+        var audioEndpoints = _audioEnumerator.FindEndpointsByMacAddress(e.Address, device.Name).ToList();
         device.IsAudioDevice = audioEndpoints.Any();
+
+        // Try to get Codec from endpoints (Win11 22H2+)
+        // Prefer the one that has a codec value (usually the A2DP Stereo endpoint)
+        var codecEndpoint = audioEndpoints.FirstOrDefault(ep => !string.IsNullOrEmpty(ep.Codec));
+        if (codecEndpoint != null)
+        {
+            device.AudioCodec = codecEndpoint.Codec;
+            DebugLogger.Log($"OnDeviceAdded: Device {device.Name} has Codec={device.AudioCodec}");
+        }
 
         device.ClassOfDevice = e.ClassOfDevice;
 

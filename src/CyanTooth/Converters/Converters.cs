@@ -29,9 +29,20 @@ public class BooleanToVisibilityConverter : IValueConverter
     }
 }
 
-/// <summary>
-/// Converts nullable byte (battery level) to visibility
-/// </summary>
+public class StringNullOrEmptyToVisibilityConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is string s && !string.IsNullOrEmpty(s))
+            return Visibility.Visible;
+        return Visibility.Collapsed;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
 public class NullableToVisibilityConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

@@ -124,12 +124,37 @@ public class AudioEndpointEnumerator : IDisposable
                             }
 
                             Guid containerId = Guid.Empty;
+                            string? codec = null;
                             if (propertyStore != null)
                             {
                                 try
                                 {
                                     var val = propertyStore.GetValue(Ole32.PROPERTYKEY.System.Devices.ContainerId);
                                     if (val is Guid g) containerId = g;
+                                    
+                                    // Try to read A2DP Codec (Win11 22H2+)
+                                    // Key: {7811094D-3721-4993-94EC-23A9E963E090}, 2
+                                    var codecKey = new Ole32.PROPERTYKEY(new Guid("7811094D-3721-4993-94EC-23A9E963E090"), 2);
+                                    var codecVal = propertyStore.GetValue(codecKey);
+                                    if (codecVal != null)
+                                    {
+                                        // 0=SBC, 1=AAC, 2=aptX, 3=aptX HD, 4=LDAC
+                                        if (codecVal is uint codecIndex || codecVal is int codecIndexInt)
+                                        {
+                                            uint idx = codecVal is uint u ? u : (uint)(int)codecVal;
+                                            codec = idx switch
+                                            {
+                                                0 => "SBC",
+                                                1 => "AAC",
+                                                2 => "aptX",
+                                                3 => "aptX HD",
+                                                4 => "LDAC",
+                                                5 => "LC3",
+                                                _ => $"Codec {idx}"
+                                            };
+                                            DebugLogger.Log($"GetBluetoothAudioEndpoints: Found Codec={codec} for {friendlyName}");
+                                        }
+                                    }
                                 }
                                 catch { }
                             }
@@ -139,6 +164,7 @@ public class AudioEndpointEnumerator : IDisposable
                                 DeviceId = deviceId,
                                 FriendlyName = friendlyName,
                                 ContainerId = containerId,
+                                Codec = codec,
                                 IsBluetooth = true,
                                 KsControl = ksControl,
                                 MMDevice = device,
@@ -247,6 +273,7 @@ public class AudioEndpointInfo
     public required string DeviceId { get; init; }
     public required string FriendlyName { get; init; }
     public Guid ContainerId { get; init; }
+    public string? Codec { get; init; } // Win11 22H2+ Codec info
     public bool IsBluetooth { get; init; }
     public IKsControl? KsControl { get; init; }
     public IMMDevice? MMDevice { get; init; }
