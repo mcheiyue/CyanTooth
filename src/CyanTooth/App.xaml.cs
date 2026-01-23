@@ -26,6 +26,9 @@ public partial class App : System.Windows.Application
 
     public new static App Current => (App)System.Windows.Application.Current;
 
+    // 标志位：指示应用是否正在进行真正的退出流程
+    public static bool IsExiting { get; set; } = false;
+
     public App()
     {
         // 关键调试：如果在极早期崩溃，显示消息框
@@ -186,7 +189,11 @@ public partial class App : System.Windows.Application
         menu.Items.Add(new System.Windows.Controls.Separator());
 
         var exitItem = new System.Windows.Controls.MenuItem { Header = "退出" };
-        exitItem.Click += (s, e) => Shutdown();
+        exitItem.Click += (s, e) => 
+        {
+            IsExiting = true;
+            Shutdown();
+        };
         menu.Items.Add(exitItem);
 
         return menu;

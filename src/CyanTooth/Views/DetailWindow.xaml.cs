@@ -39,4 +39,15 @@ public partial class DetailWindow : Wpf.Ui.Controls.FluentWindow
             DebugLogger.LogError("DetailWindow DataContext injection failed", ex);
         }
     }
+
+    protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+    {
+        // 除非是应用显式退出(通过托盘菜单)，否则点击关闭只隐藏窗口
+        if (!App.IsExiting)
+        {
+            e.Cancel = true;
+            Hide();
+        }
+        base.OnClosing(e);
+    }
 }
