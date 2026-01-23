@@ -31,8 +31,11 @@ public partial class DetailWindow : Wpf.Ui.Controls.FluentWindow
             // Navigate to first page
             RootNavigation.Navigate(typeof(Pages.DevicePage));
             
-            // Explicitly hide back button to avoid UI glitch
-            RootNavigation.IsBackButtonVisible = Wpf.Ui.Controls.NavigationViewBackButtonVisible.Collapsed;
+            // Ensure back button is hidden
+            Loaded += (s, e) => 
+            {
+                RootNavigation.IsBackButtonVisible = Wpf.Ui.Controls.NavigationViewBackButtonVisible.Collapsed;
+            };
         }
         catch (Exception ex)
         {

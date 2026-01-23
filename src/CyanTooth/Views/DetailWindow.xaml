@@ -34,7 +34,8 @@
                            x:Name="RootNavigation"
                            PaneDisplayMode="Left"
                            IsPaneOpen="False"
-                           OpenPaneLength="180">
+                           OpenPaneLength="180"
+                           IsBackButtonVisible="Collapsed">
             <ui:NavigationView.MenuItems>
                 <ui:NavigationViewItem Content="设备" Tag="device">
                     <ui:NavigationViewItem.Icon>
