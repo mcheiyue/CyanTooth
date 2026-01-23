@@ -73,6 +73,7 @@ Run these commands from the solution root (`D:\Github\CyanTooth`).
 4.  **No "Magic" Strings**: Use constants or `nameof()` where possible.
 5.  **Git Commit Language**: All git commit messages MUST be written in **Chinese**.
 6.  **Release Verification**: NEVER push a new version tag (triggering a release) without verifying the build locally. Ensure the codebase is stable before publishing.
+7.  **Release Notes**: All release notes must be written in **Chinese**. Ensure the content is meaningful and informative, not just a list of commits.
 
 ## 6. Implementation Workflow (Simulated)
 
