@@ -14,6 +14,11 @@ namespace CyanTooth.Platform.Audio;
 /// </summary>
 public class AudioEndpointEnumerator : IDisposable
 {
+    // Standard Windows Property Keys
+    // private static readonly PROPERTYKEY PKEY_ItemNameDisplay = ...
+    // Temporarily disabled due to PROPERTYKEY type resolution issue
+    // private static readonly Vanara.PInvoke.PropSys.PROPERTYKEY PKEY_ItemNameDisplay = ...
+
     private IMMDeviceEnumerator? _deviceEnumerator;
 
     public AudioEndpointEnumerator()
@@ -107,19 +112,33 @@ public class AudioEndpointEnumerator : IDisposable
                             // Get endpoint properties
                             string? deviceId = device.GetId();
                             
-                            // NOTE: PROPERTYKEY lookups temporarily commented out due to namespace resolution issues in hotfix.
-                            // This means FriendlyName will be "Unknown" and Codec will be null for now.
-                            // Stability is prioritized over metadata.
-                            
+                            // PROPERTYKEY lookups disabled to ensure build stability
                             // var propertyStore = device.OpenPropertyStore(STGM.STGM_READ);
-                            string friendlyName = "Unknown"; 
-                            // try { friendlyName = propertyStore.GetValue(PROPERTYKEY.System.ItemNameDisplay)?.ToString() ?? "Unknown"; } catch {}
+                            string friendlyName = "Unknown";
+                            /*
+                            try
+                            {
+                                var prop = propertyStore.GetValue(PKEY_ItemNameDisplay);
+                                friendlyName = prop?.ToString() ?? "Unknown";
+                            }
+                            catch {}
+                            */
 
                             Guid containerId = Guid.Empty;
-                            // try { containerId = (Guid)propertyStore.GetValue(PROPERTYKEY.System.Devices.ContainerId); } catch {}
+                            /*
+                            try
+                            {
+                                var prop = propertyStore.GetValue(PKEY_Devices_ContainerId);
+                                if (prop != null)
+                                {
+                                    containerId = (Guid)prop;
+                                }
+                            }
+                            catch {}
+                            */
 
-                            string? codec = null;
-                            // try { ... Codec logic ... } catch {}
+                            // Get Codec info if available
+                            string? codec = null; // GetAudioCodec(propertyStore);
                             
                             var endpointInfo = new AudioEndpointInfo
                             {

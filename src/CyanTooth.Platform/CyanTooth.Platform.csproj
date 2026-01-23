@@ -17,6 +17,7 @@
     
     <!-- SetupAPI for device enumeration -->
     <PackageReference Include="Vanara.PInvoke.SetupAPI" Version="4.0.4" />
+    <PackageReference Include="Vanara.PInvoke.Shared" Version="4.0.4" />
   </ItemGroup>
 
 </Project>
