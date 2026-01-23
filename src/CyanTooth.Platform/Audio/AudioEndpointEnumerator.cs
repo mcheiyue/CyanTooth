@@ -14,10 +14,11 @@ namespace CyanTooth.Platform.Audio;
 /// </summary>
 public class AudioEndpointEnumerator : IDisposable
 {
-    // Standard Windows Property Keys
-    // private static readonly PROPERTYKEY PKEY_ItemNameDisplay = ...
-    // Temporarily disabled due to PROPERTYKEY type resolution issue
-    // private static readonly Vanara.PInvoke.PropSys.PROPERTYKEY PKEY_ItemNameDisplay = ...
+    // Standard Windows Property Keys (using Ole32.PROPERTYKEY - Vanara compatible type)
+    private static readonly Ole32.PROPERTYKEY PKEY_Device_FriendlyName = 
+        new(new Guid("a45c254e-df1c-4efd-8020-67d146a850e0"), 14);
+    private static readonly Ole32.PROPERTYKEY PKEY_AudioEndpoint_Codec = 
+        new(new Guid("7811094D-3721-4993-94EC-23A9E963E090"), 2);
 
     private IMMDeviceEnumerator? _deviceEnumerator;
 
@@ -111,34 +112,53 @@ public class AudioEndpointEnumerator : IDisposable
 
                             // Get endpoint properties
                             string? deviceId = device.GetId();
+                            var propertyStore = device.OpenPropertyStore(STGM.STGM_READ);
                             
-                            // PROPERTYKEY lookups disabled to ensure build stability
-                            // var propertyStore = device.OpenPropertyStore(STGM.STGM_READ);
                             string friendlyName = "Unknown";
-                            /*
-                            try
+                            if (propertyStore != null)
                             {
-                                var prop = propertyStore.GetValue(PKEY_ItemNameDisplay);
-                                friendlyName = prop?.ToString() ?? "Unknown";
+                                try
+                                {
+                                    var friendlyNameProp = propertyStore.GetValue(PKEY_Device_FriendlyName);
+                                    if (friendlyNameProp != null)
+                                        friendlyName = friendlyNameProp.ToString() ?? "Unknown";
+                                }
+                                catch { }
                             }
-                            catch {}
-                            */
 
                             Guid containerId = Guid.Empty;
-                            /*
-                            try
+                            string? codec = null;
+                            if (propertyStore != null)
                             {
-                                var prop = propertyStore.GetValue(PKEY_Devices_ContainerId);
-                                if (prop != null)
+                                try
                                 {
-                                    containerId = (Guid)prop;
+                                    var containerIdVal = propertyStore.GetValue(Ole32.PROPERTYKEY.System.Devices.ContainerId);
+                                    if (containerIdVal is Guid g) containerId = g;
+                                    
+                                    // Try to read A2DP Codec (Win11 22H2+)
+                                    var codecVal = propertyStore.GetValue(PKEY_AudioEndpoint_Codec);
+                                    if (codecVal != null)
+                                    {
+                                        // 0=SBC, 1=AAC, 2=aptX, 3=aptX HD, 4=LDAC, 5=LC3
+                                        if (codecVal is uint codecIndex || codecVal is int)
+                                        {
+                                            uint idx = codecVal is uint u ? u : (uint)(int)codecVal;
+                                            codec = idx switch
+                                            {
+                                                0 => "SBC",
+                                                1 => "AAC",
+                                                2 => "aptX",
+                                                3 => "aptX HD",
+                                                4 => "LDAC",
+                                                5 => "LC3",
+                                                _ => $"Codec {idx}"
+                                            };
+                                            DebugLogger.Log($"GetBluetoothAudioEndpoints: Found Codec={codec} for {friendlyName}");
+                                        }
+                                    }
                                 }
+                                catch { }
                             }
-                            catch {}
-                            */
-
-                            // Get Codec info if available
-                            string? codec = null; // GetAudioCodec(propertyStore);
                             
                             var endpointInfo = new AudioEndpointInfo
                             {
