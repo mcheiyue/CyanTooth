@@ -32,7 +32,8 @@ public class DeviceDiscoverer : IDisposable
         "System.Devices.Aep.IsPaired",
         "System.Devices.Aep.Bluetooth.Le.IsConnectable",
         "System.Devices.Aep.Category",
-        "System.Devices.Aep.ContainerId"
+        "System.Devices.Aep.ContainerId",
+        "{ea900399-b1d5-4529-a35c-43f295b92209} 26" // System.Devices.Aep.Bluetooth.Cod (Canonical names not always supported for this prop)
     ];
 
     /// <summary>
@@ -164,11 +165,19 @@ public class DeviceDiscoverer : IDisposable
         var device = await GetBluetoothDeviceAsync(deviceInfo.Id);
         if (device == null) return;
 
+        uint cod = 0;
+        // Use the GUID format key for CoD retrieval
+        if (deviceInfo.Properties.TryGetValue("{ea900399-b1d5-4529-a35c-43f295b92209} 26", out var codVal) && codVal is uint codUint)
+        {
+            cod = codUint;
+        }
+
         var args = new DeviceDiscoveredEventArgs
         {
             DeviceId = deviceInfo.Id,
             Name = device.Name,
             Address = device.BluetoothAddress,
+            ClassOfDevice = cod,
             DeviceType = DiscoveredDeviceType.Classic,
             IsConnected = device.ConnectionStatus == BluetoothConnectionStatus.Connected,
             IsPaired = deviceInfo.Pairing.IsPaired
@@ -182,11 +191,20 @@ public class DeviceDiscoverer : IDisposable
         var device = await GetBluetoothLeDeviceAsync(deviceInfo.Id);
         if (device == null) return;
 
+        // BLE devices usually don't have standard CoD, but we check anyway
+        uint cod = 0;
+        // Use the GUID format key for CoD retrieval
+        if (deviceInfo.Properties.TryGetValue("{ea900399-b1d5-4529-a35c-43f295b92209} 26", out var codVal) && codVal is uint codUint)
+        {
+            cod = codUint;
+        }
+
         var args = new DeviceDiscoveredEventArgs
         {
             DeviceId = deviceInfo.Id,
             Name = device.Name,
             Address = device.BluetoothAddress,
+            ClassOfDevice = cod,
             DeviceType = DiscoveredDeviceType.LowEnergy,
             IsConnected = device.ConnectionStatus == BluetoothConnectionStatus.Connected,
             IsPaired = deviceInfo.Pairing.IsPaired
@@ -241,6 +259,7 @@ public class DeviceDiscoveredEventArgs : EventArgs
     public required string DeviceId { get; init; }
     public string? Name { get; init; }
     public ulong Address { get; init; }
+    public uint ClassOfDevice { get; init; }
     public DiscoveredDeviceType DeviceType { get; init; }
     public bool IsConnected { get; init; }
     public bool IsPaired { get; init; }

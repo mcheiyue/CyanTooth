@@ -55,9 +55,21 @@ public static class DebugLogger
                     Directory.CreateDirectory(_logDirectory);
                 }
 
-                // 使用唯一的日志文件名，避免与系统自带的 cyantooth_runtime.log 混淆
                 _logPath = Path.Combine(_logDirectory, "cyantooth_runtime.log");
                 
+                // [Feature] Startup Log Archiving
+                // On every startup, move existing log to .last to keep current log fresh
+                try 
+                {
+                    if (File.Exists(_logPath))
+                    {
+                        string lastLogPath = Path.Combine(_logDirectory, "cyantooth_runtime.last.log");
+                        File.Copy(_logPath, lastLogPath, overwrite: true);
+                        File.Delete(_logPath);
+                    }
+                }
+                catch { /* Ignore archiving errors */ }
+
                 // 写入启动标记
                 File.AppendAllText(_logPath, $"{Environment.NewLine}=================================================={Environment.NewLine}");
                 File.AppendAllText(_logPath, $">>>> [{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [SYSTEM_BOOT] 日志重定向成功{Environment.NewLine}");

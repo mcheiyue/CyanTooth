@@ -68,6 +68,12 @@ public partial class BluetoothDevice : ObservableObject
     private bool _isAudioDevice;
 
     /// <summary>
+    /// Bluetooth Class of Device (CoD)
+    /// </summary>
+    [ObservableProperty]
+    private uint _classOfDevice;
+
+    /// <summary>
     /// PnP Instance ID for battery reading
     /// </summary>
     public string? InstanceId { get; set; }
