@@ -67,6 +67,23 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public void Initialize()
     {
+        // Populate existing devices from service
+        App.Current.Dispatcher.Invoke(() =>
+        {
+            foreach (var device in _bluetoothService.Devices.Values)
+            {
+                if (Devices.Any(d => d.Id == device.Id)) continue;
+
+                var viewModel = new DeviceViewModel(device)
+                {
+                    IsFavorite = _configService.Settings.FavoriteDevices.Contains(device.Id)
+                };
+                Devices.Add(viewModel);
+            }
+            OnPropertyChanged(nameof(TotalDeviceCount));
+            OnPropertyChanged(nameof(ConnectedDeviceCount));
+        });
+
         _bluetoothService.Start();
     }
 

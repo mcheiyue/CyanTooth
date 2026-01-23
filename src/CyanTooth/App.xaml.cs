@@ -59,6 +59,7 @@ public partial class App : System.Windows.Application
                     services.AddSingleton<NotificationService>();
                     services.AddSingleton<MainViewModel>();
                     services.AddTransient<SettingsViewModel>();
+                    services.AddTransient<DetailViewModel>();
                     services.AddSingleton<TrayIconViewModel>();
                 })
                 .Build();
@@ -103,6 +104,7 @@ public partial class App : System.Windows.Application
 
             DebugLogger.Log("正在初始化蓝牙服务...");
             var bluetoothService = Services.GetRequiredService<BluetoothService>();
+            bluetoothService.Start();
             var mainViewModel = Services.GetRequiredService<MainViewModel>();
             mainViewModel.Initialize();
 
@@ -114,8 +116,8 @@ public partial class App : System.Windows.Application
 
             if (!startMinimized)
             {
-                DebugLogger.Log("正在显示主界面 (Flyout)...");
-                ShowFlyout();
+                DebugLogger.Log("正在显示主界面 (DetailWindow)...");
+                ShowDetailWindow();
             }
             
             DebugLogger.Log("程序进入空闲循环");
@@ -152,7 +154,7 @@ public partial class App : System.Windows.Application
                 ContextMenu = CreateContextMenu()
             };
 
-            _trayIcon.TrayMouseDoubleClick += (s, e) => ShowFlyout();
+            _trayIcon.TrayMouseDoubleClick += (s, e) => ShowDetailWindow();
             _trayIcon.TrayLeftMouseUp += (s, e) => ShowFlyout();
 
             var trayViewModel = Services.GetRequiredService<TrayIconViewModel>();
@@ -167,19 +169,15 @@ public partial class App : System.Windows.Application
     private System.Windows.Controls.ContextMenu CreateContextMenu()
     {
         var menu = new System.Windows.Controls.ContextMenu();
-        var openItem = new System.Windows.Controls.MenuItem { Header = "打开" };
-        openItem.Click += (s, e) => ShowFlyout();
-        menu.Items.Add(openItem);
+        var detailItem = new System.Windows.Controls.MenuItem { Header = "详细信息" };
+        detailItem.Click += (s, e) => ShowDetailWindow();
+        menu.Items.Add(detailItem);
 
         var refreshItem = new System.Windows.Controls.MenuItem { Header = "刷新设备" };
         refreshItem.Click += (s, e) => Services.GetRequiredService<BluetoothService>().RefreshDevices();
         menu.Items.Add(refreshItem);
 
         menu.Items.Add(new System.Windows.Controls.Separator());
-
-        var settingsItem = new System.Windows.Controls.MenuItem { Header = "设置" };
-        settingsItem.Click += (s, e) => ShowSettings();
-        menu.Items.Add(settingsItem);
 
         var windowsSettingsItem = new System.Windows.Controls.MenuItem { Header = "系统蓝牙设置" };
         windowsSettingsItem.Click += (s, e) => OpenWindowsBluetoothSettings();
@@ -195,6 +193,35 @@ public partial class App : System.Windows.Application
     }
 
     private Views.FlyoutWindow? _flyoutWindow;
+    private Views.DetailWindow? _detailWindow;
+
+    public void ShowDetailWindow()
+    {
+        try
+        {
+            if (_detailWindow == null || !_detailWindow.IsLoaded)
+            {
+                _detailWindow = new Views.DetailWindow();
+            }
+
+            if (_detailWindow.IsVisible)
+            {
+                if (_detailWindow.WindowState == WindowState.Minimized)
+                    _detailWindow.WindowState = WindowState.Normal;
+                _detailWindow.Activate();
+            }
+            else
+            {
+                _detailWindow.Show();
+                _detailWindow.Activate();
+            }
+        }
+        catch (Exception ex)
+        {
+             DebugLogger.LogError("显示 DetailWindow 失败", ex);
+             MessageBox.Show($"显示详细窗口失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
 
     private void ShowFlyout()
     {
@@ -223,21 +250,8 @@ public partial class App : System.Windows.Application
         }
     }
 
-    private void ShowSettings()
-    {
-        try
-        {
-            var settingsWindow = new Views.SettingsWindow();
-            settingsWindow.Show();
-            settingsWindow.Activate();
-        }
-        catch (Exception ex)
-        {
-            DebugLogger.LogError("显示设置窗口失败", ex);
-            MessageBox.Show($"显示设置窗口失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-    }
-
+    // Removed ShowSettings() as it's no longer used
+    
     private static void OpenWindowsBluetoothSettings()
     {
         try

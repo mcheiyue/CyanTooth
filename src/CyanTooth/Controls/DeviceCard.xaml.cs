@@ -24,10 +24,19 @@ public partial class DeviceCard : System.Windows.Controls.UserControl
     public static readonly DependencyProperty FavoriteCommandProperty =
         DependencyProperty.Register(nameof(FavoriteCommand), typeof(ICommand), typeof(DeviceCard));
 
+    public static readonly DependencyProperty IsCompactProperty =
+        DependencyProperty.Register(nameof(IsCompact), typeof(bool), typeof(DeviceCard), new PropertyMetadata(false));
+
     public DeviceViewModel? Device
     {
         get => (DeviceViewModel?)GetValue(DeviceProperty);
         set => SetValue(DeviceProperty, value);
+    }
+
+    public bool IsCompact
+    {
+        get => (bool)GetValue(IsCompactProperty);
+        set => SetValue(IsCompactProperty, value);
     }
 
     public ICommand? ConnectCommand
@@ -52,18 +61,6 @@ public partial class DeviceCard : System.Windows.Controls.UserControl
         if (d is DeviceCard card && e.NewValue is DeviceViewModel device)
         {
             card.DataContext = device;
-        }
-    }
-
-    private void Card_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        System.Diagnostics.Debug.WriteLine($"[DEBUG] Card clicked, Device={Device?.Name}, IsAudioDevice={Device?.IsAudioDevice}, ConnectCommand={ConnectCommand != null}");
-        
-        // 单击设备时连接/断开（不限制只有音频设备）
-        if (Device != null && ConnectCommand != null)
-        {
-            System.Diagnostics.Debug.WriteLine($"[DEBUG] Executing ConnectCommand for {Device.Name}");
-            ConnectCommand.Execute(Device);
         }
     }
 

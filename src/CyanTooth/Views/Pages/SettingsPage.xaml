@@ -1,0 +1,94 @@
+<Page x:Class="CyanTooth.Views.Pages.SettingsPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:vm="clr-namespace:CyanTooth.ViewModels"
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="800"
+      Title="SettingsPage">
+
+    <ScrollViewer Padding="24,16">
+        <StackPanel>
+            <!-- General Section -->
+            <TextBlock Text="常规" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,12"/>
+
+            <ui:CardExpander Header="启动" Icon="{ui:SymbolIcon Power24}" Margin="0,0,0,8">
+                <StackPanel Margin="8">
+                    <ui:ToggleSwitch Content="启动时最小化到托盘"
+                                    IsChecked="{Binding StartMinimized}"/>
+                    <ui:ToggleSwitch Content="开机自启动"
+                                    IsChecked="{Binding RunAtStartup}"
+                                    Margin="0,8,0,0"/>
+                </StackPanel>
+            </ui:CardExpander>
+
+            <!-- Appearance Section -->
+            <TextBlock Text="外观" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,24,0,12"/>
+
+            <ui:CardControl Header="主题" Icon="{ui:SymbolIcon PaintBrush24}" Margin="0,0,0,8">
+                <ComboBox Width="150"
+                         ItemsSource="{Binding AvailableThemes}"
+                         SelectedItem="{Binding SelectedTheme, Mode=TwoWay}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Path=.}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </ui:CardControl>
+
+            <ui:CardControl Header="在托盘显示电量" Icon="{ui:SymbolIcon Battery224}" Margin="0,0,0,8">
+                <ui:ToggleSwitch IsChecked="{Binding ShowBatteryInTray}"/>
+            </ui:CardControl>
+
+            <!-- Notifications Section -->
+            <TextBlock Text="通知" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,24,0,12"/>
+
+            <ui:CardControl Header="连接状态变化" Icon="{ui:SymbolIcon PlugConnected24}" Margin="0,0,0,8">
+                <ui:ToggleSwitch IsChecked="{Binding ShowConnectionNotifications}"/>
+            </ui:CardControl>
+
+            <ui:CardControl Header="低电量警告" Icon="{ui:SymbolIcon BatteryWarning24}" Margin="0,0,0,8">
+                <ui:ToggleSwitch IsChecked="{Binding ShowLowBatteryNotifications}"/>
+            </ui:CardControl>
+
+            <ui:CardControl Header="低电量阈值" Icon="{ui:SymbolIcon Gauge24}" Margin="0,0,0,8">
+                <ComboBox Width="100"
+                         ItemsSource="{Binding BatteryThresholdOptions}"
+                         SelectedItem="{Binding LowBatteryThreshold, Mode=TwoWay}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock>
+                                <Run Text="{Binding Path=., Mode=OneWay}"/><Run Text="%"/>
+                            </TextBlock>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </ui:CardControl>
+
+            <!-- Advanced Section -->
+            <TextBlock Text="高级" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,24,0,12"/>
+
+            <ui:CardControl Header="电量轮询间隔" Icon="{ui:SymbolIcon Timer24}" Margin="0,0,0,8">
+                <ComboBox Width="120"
+                         ItemsSource="{Binding PollIntervalOptions}"
+                         SelectedItem="{Binding BatteryPollInterval, Mode=TwoWay}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock>
+                                <Run Text="{Binding Path=., Mode=OneWay}"/><Run Text=" 秒"/>
+                            </TextBlock>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </ui:CardControl>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,24,0,0">
+                <ui:Button Content="重置默认" Command="{Binding ResetCommand}" Appearance="Secondary" Margin="0,0,8,0"/>
+                <ui:Button Content="保存设置" Command="{Binding SaveCommand}" Appearance="Primary"/>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

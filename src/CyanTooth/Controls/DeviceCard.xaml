@@ -39,9 +39,7 @@
            BorderThickness="1"
            CornerRadius="8"
            Padding="12"
-           Margin="0,4"
-           Cursor="Hand"
-           MouseLeftButtonDown="Card_MouseLeftButtonDown">
+           Margin="0,4">
         
         <Border.Style>
             <Style TargetType="Border">
@@ -98,9 +96,19 @@
                     <ui:SymbolIcon Grid.Column="1" 
                                   Symbol="Star24" 
                                   Foreground="{DynamicResource SystemFillColorAttentionBrush}"
-                                  Visibility="{Binding IsFavorite, Converter={StaticResource BoolToVis}}"
                                   Margin="4,0,0,0"
-                                  FontSize="12"/>
+                                  FontSize="12">
+                        <ui:SymbolIcon.Style>
+                            <Style TargetType="ui:SymbolIcon">
+                                <Setter Property="Visibility" Value="{Binding IsFavorite, Converter={StaticResource BoolToVis}}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsCompact, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ui:SymbolIcon.Style>
+                    </ui:SymbolIcon>
                 </Grid>
                 
                 <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
@@ -127,8 +135,17 @@
                             Background="{DynamicResource ControlFillColorSecondaryBrush}"
                             CornerRadius="3"
                             Padding="4,0"
-                            VerticalAlignment="Center"
-                            Visibility="{Binding AudioCodec, Converter={StaticResource StringToVis}}">
+                            VerticalAlignment="Center">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Visibility" Value="{Binding AudioCodec, Converter={StaticResource StringToVis}}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsCompact, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
                         <TextBlock Text="{Binding AudioCodec}" 
                                    FontSize="10" 
                                    FontWeight="SemiBold"
@@ -169,6 +186,15 @@
                       Padding="8"
                       ToolTip="更多选项"
                       Click="MoreOptions_Click">
+                <ui:Button.Style>
+                    <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsCompact, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ui:Button.Style>
                 <ui:Button.Content>
                     <ui:SymbolIcon Symbol="MoreVertical24"/>
                 </ui:Button.Content>

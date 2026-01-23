@@ -1,0 +1,28 @@
+<Page x:Class="CyanTooth.Views.Pages.AboutPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="800"
+      Title="AboutPage">
+
+    <Grid>
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+            <ui:SymbolIcon Symbol="Bluetooth24" FontSize="64" Foreground="{DynamicResource AccentFillColorDefaultBrush}" Margin="0,0,0,24"/>
+            <TextBlock Text="CyanTooth" FontSize="24" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+            <TextBlock Text="版本 1.2.0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" Margin="0,4,0,24"/>
+
+            <TextBlock Text="一款现代化的蓝牙设备管理工具" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+            <TextBlock Text="基于 .NET 8 与 WPF-UI 构建" Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center"/>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,32,0,0">
+                <ui:HyperlinkButton Content="访问 GitHub" Icon="{ui:SymbolIcon Globe24}" NavigateUri="https://github.com/mcheiyue/CyanTooth"/>
+                <ui:HyperlinkButton Content="提交反馈" Icon="{ui:SymbolIcon Comment24}" NavigateUri="https://github.com/mcheiyue/CyanTooth/issues" Margin="16,0,0,0"/>
+            </StackPanel>
+
+            <TextBlock Text="© 2024 CyanTooth Contributors" FontSize="12" Foreground="{DynamicResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" Margin="0,48,0,0"/>
+        </StackPanel>
+    </Grid>
+</Page>

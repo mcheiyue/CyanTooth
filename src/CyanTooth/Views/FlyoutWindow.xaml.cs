@@ -36,11 +36,19 @@ public partial class FlyoutWindow : Wpf.Ui.Controls.FluentWindow
         Hide();
     }
 
-    private void Settings_Click(object sender, RoutedEventArgs e)
+    private void Detail_Click(object sender, RoutedEventArgs e)
     {
-        var settingsWindow = new SettingsWindow();
-        settingsWindow.Show();
+        // Close flyout and open DetailWindow
         Hide();
+        
+        // Use reflection to call App.ShowDetailWindow if available, or just use App instance cast
+        if (Application.Current is App app)
+        {
+            // We will implement this method in App.xaml.cs later
+            // app.ShowDetailWindow();
+            var method = typeof(App).GetMethod("ShowDetailWindow");
+            method?.Invoke(app, null);
+        }
     }
 
     private void OpenWindowsSettings_Click(object sender, RoutedEventArgs e)
