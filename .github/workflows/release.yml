@@ -1,107 +1,70 @@
-name: CD - Release Build
+name: Release
 
 on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g. v1.0.2)'
+        required: true
+        default: 'v1.0.2'
   push:
     tags:
       - 'v*.*.*'
-  workflow_dispatch:
 
 jobs:
-  release:
+  build-release:
+    name: Build Release
     runs-on: windows-latest
-    permissions:
-      contents: write
+    strategy:
+      matrix:
+        arch: [x64, arm64]
     
     steps:
-    - name: 检出代码
-      uses: actions/checkout@v4
-    
-    - name: 安装 .NET 8
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
-    
-    - name: 获取版本号
+
+    - name: Extract Version
       id: get_version
-      run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
       shell: bash
-    
-    # 1. 构建轻量版 (Framework-dependent)
-    - name: 构建 x64 轻量版 (需要 .NET 8)
       run: |
-        dotnet publish src/CyanTooth/CyanTooth.csproj `
-          --configuration Release `
-          --runtime win-x64 `
-          --self-contained false `
-          -p:PublishSingleFile=true `
-          --output ./publish/lightweight/win-x64
-    
-    - name: 构建 ARM64 轻量版 (需要 .NET 8)
-      run: |
-        dotnet publish src/CyanTooth/CyanTooth.csproj `
-          --configuration Release `
-          --runtime win-arm64 `
-          --self-contained false `
-          -p:PublishSingleFile=true `
-          --output ./publish/lightweight/win-arm64
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+          echo "clean_version=${{ github.event.inputs.version }}" | sed 's/^v//' >> $GITHUB_ENV
+        else
+          echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          echo "clean_version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+        fi
 
-    # 2. 构建完整版 (Self-contained + Compressed)
-    - name: 构建 x64 完整版 (无需 .NET)
+    # 1. 轻量版 (Framework-dependent)
+    # 不使用 SingleFile，而是普通的 Publish，以保留 runtimeconfig.json，并打成 Zip
+    - name: Publish Lightweight (Zip)
       run: |
-        dotnet publish src/CyanTooth/CyanTooth.csproj `
-          --configuration Release `
-          --runtime win-x64 `
-          --self-contained true `
-          -p:PublishSingleFile=true `
-          -p:EnableCompressionInSingleFile=true `
-          -p:IncludeNativeLibrariesForSelfExtract=true `
-          -p:PublishReadyToRun=true `
-          --output ./publish/standalone/win-x64
-    
-    - name: 构建 ARM64 完整版 (无需 .NET)
-      run: |
-        dotnet publish src/CyanTooth/CyanTooth.csproj `
-          --configuration Release `
-          --runtime win-arm64 `
-          --self-contained true `
-          -p:PublishSingleFile=true `
-          -p:EnableCompressionInSingleFile=true `
-          -p:IncludeNativeLibrariesForSelfExtract=true `
-          --output ./publish/standalone/win-arm64
+        dotnet publish src/CyanTooth/CyanTooth.csproj -c Release -r win-${{ matrix.arch }} --self-contained false -p:Version=${{ env.clean_version }} -o ./publish_lightweight
+        Compress-Archive -Path ./publish_lightweight/* -DestinationPath ./CyanTooth-win-${{ matrix.arch }}-lightweight.zip
 
-    # 3. 重命名文件
-    - name: 准备发布文件
+    # 2. 独立版 (Self-contained SingleFile)
+    # 开启 R2R (ReadyToRun) 可能导致体积变大，这里权衡后暂不开启 R2R 以减小体积，或者仅使用 Trim (如果不影响反射)
+    # 这里保持稳妥：SelfContained=true, SingleFile=true, EnableCompressionInSingleFile=true (压缩体积)
+    - name: Publish Standalone (SingleFile)
       run: |
-        mkdir release-assets
-        # 轻量版
-        copy .\publish\lightweight\win-x64\CyanTooth.exe .\release-assets\CyanTooth-x64.exe
-        copy .\publish\lightweight\win-arm64\CyanTooth.exe .\release-assets\CyanTooth-arm64.exe
-        # 完整版
-        copy .\publish\standalone\win-x64\CyanTooth.exe .\release-assets\CyanTooth-x64-standalone.exe
-        copy .\publish\standalone\win-arm64\CyanTooth.exe .\release-assets\CyanTooth-arm64-standalone.exe
-      shell: cmd
-    
-    # 4. 创建 GitHub Release
-    - name: 创建 GitHub Release
-      uses: softprops/action-gh-release@v1
+        dotnet publish src/CyanTooth/CyanTooth.csproj -c Release -r win-${{ matrix.arch }} --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:Version=${{ env.clean_version }} -o ./publish_standalone
+        move publish_standalone\CyanTooth.exe CyanTooth-win-${{ matrix.arch }}-standalone.exe
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/tags/')
       with:
-        files: release-assets/*.exe
-        body: |
-          ## 🎉 CyanTooth ${{ steps.get_version.outputs.VERSION }}
-          
-          ### 📦 下载选项
-          
-          #### 🔹 推荐版本 (体积小，需安装 .NET 8)
-          - **x64**: `CyanTooth-x64.exe` (~38 MB)
-          - **ARM64**: `CyanTooth-arm64.exe`
-          
-          #### 🔸 独立版本 (体积较大，无需配置)
-          - **x64**: `CyanTooth-x64-standalone.exe` (~75 MB)
-          - **ARM64**: `CyanTooth-arm64-standalone.exe`
-          
-          ### ✨ 更新内容
-          请查看提交历史了解详细变更。
+        files: |
+          CyanTooth-win-${{ matrix.arch }}-lightweight.zip
+          CyanTooth-win-${{ matrix.arch }}-standalone.exe
+        generate_release_notes: true
         draft: false
         prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
