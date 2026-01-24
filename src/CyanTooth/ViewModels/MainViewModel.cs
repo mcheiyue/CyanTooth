@@ -42,6 +42,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private bool _showOnlyAudio;
 
+    public bool ShowBatteryInFlyout => _configService.Settings.ShowBatteryInTray;
+
     public int ConnectedDeviceCount => Devices.Count(d => d.IsConnected);
     public int TotalDeviceCount => Devices.Count;
 
@@ -64,6 +66,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _bluetoothService.DeviceConnectionChanged += OnDeviceConnectionChanged;
         _bluetoothService.DeviceBatteryChanged += OnDeviceBatteryChanged;
         _bluetoothService.DeviceCodecChanged += OnDeviceCodecChanged;
+        _configService.SettingsChanged += OnSettingsChanged;
     }
 
     public void Initialize()
@@ -298,6 +301,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
         });
     }
 
+    private void OnSettingsChanged(object? sender, EventArgs e)
+    {
+        App.Current.Dispatcher.Invoke(() =>
+        {
+            OnPropertyChanged(nameof(ShowBatteryInFlyout));
+        });
+    }
+
     public void Dispose()
     {
         _bluetoothService.DeviceDiscovered -= OnDeviceDiscovered;
@@ -305,5 +316,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _bluetoothService.DeviceConnectionChanged -= OnDeviceConnectionChanged;
         _bluetoothService.DeviceBatteryChanged -= OnDeviceBatteryChanged;
         _bluetoothService.DeviceCodecChanged -= OnDeviceCodecChanged;
+        _configService.SettingsChanged -= OnSettingsChanged;
     }
 }

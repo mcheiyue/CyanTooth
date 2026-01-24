@@ -5,7 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CyanTooth.Core.Models;
 using CyanTooth.Core.Services;
-
+using CyanTooth.Services;
 
 namespace CyanTooth.ViewModels;
 
@@ -15,6 +15,7 @@ namespace CyanTooth.ViewModels;
 public partial class SettingsViewModel : ObservableObject
 {
     private readonly ConfigService _configService;
+    private readonly ThemeService _themeService;
 
     [ObservableProperty]
     private bool _startMinimized;
@@ -46,9 +47,10 @@ public partial class SettingsViewModel : ObservableObject
 
     public int[] BatteryThresholdOptions => [10, 15, 20, 25, 30];
 
-    public SettingsViewModel(ConfigService configService)
+    public SettingsViewModel(ConfigService configService, ThemeService themeService)
     {
         _configService = configService;
+        _themeService = themeService;
         LoadSettings();
     }
 
@@ -93,21 +95,6 @@ public partial class SettingsViewModel : ObservableObject
     partial void OnSelectedThemeChanged(AppTheme value)
     {
         // Apply theme immediately
-        ApplyTheme(value);
-    }
-
-    private static void ApplyTheme(AppTheme theme)
-    {
-        var targetTheme = theme switch
-        {
-            AppTheme.Light => Wpf.Ui.Appearance.ApplicationTheme.Light,
-            AppTheme.Dark => Wpf.Ui.Appearance.ApplicationTheme.Dark,
-            _ => Wpf.Ui.Appearance.ApplicationTheme.Unknown
-        };
-
-        if (targetTheme != Wpf.Ui.Appearance.ApplicationTheme.Unknown)
-        {
-            Wpf.Ui.Appearance.ApplicationThemeManager.Apply(targetTheme);
-        }
+        _themeService.ApplyTheme(value);
     }
 }

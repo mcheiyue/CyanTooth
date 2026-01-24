@@ -27,6 +27,9 @@ public partial class DeviceCard : System.Windows.Controls.UserControl
     public static readonly DependencyProperty IsCompactProperty =
         DependencyProperty.Register(nameof(IsCompact), typeof(bool), typeof(DeviceCard), new PropertyMetadata(false));
 
+    public static readonly DependencyProperty ShowBatteryInFlyoutProperty =
+        DependencyProperty.Register(nameof(ShowBatteryInFlyout), typeof(bool), typeof(DeviceCard), new PropertyMetadata(true));
+
     public DeviceViewModel? Device
     {
         get => (DeviceViewModel?)GetValue(DeviceProperty);
@@ -37,6 +40,12 @@ public partial class DeviceCard : System.Windows.Controls.UserControl
     {
         get => (bool)GetValue(IsCompactProperty);
         set => SetValue(IsCompactProperty, value);
+    }
+
+    public bool ShowBatteryInFlyout
+    {
+        get => (bool)GetValue(ShowBatteryInFlyoutProperty);
+        set => SetValue(ShowBatteryInFlyoutProperty, value);
     }
 
     public ICommand? ConnectCommand

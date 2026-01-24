@@ -7,6 +7,7 @@ using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using CyanTooth.Core.Services;
+using CyanTooth.Services;
 using CyanTooth.ViewModels;
 using Wpf.Ui.Appearance;
 using System.Collections.Generic;
@@ -60,6 +61,7 @@ public partial class App : System.Windows.Application
                     services.AddSingleton<ConfigService>();
                     services.AddSingleton<BluetoothService>();
                     services.AddSingleton<NotificationService>();
+                    services.AddSingleton<ThemeService>();
                     services.AddSingleton<MainViewModel>();
                     services.AddTransient<SettingsViewModel>();
                     services.AddTransient<DetailViewModel>();
@@ -103,7 +105,8 @@ public partial class App : System.Windows.Application
 
             DebugLogger.Log("正在获取配置并应用主题...");
             var configService = Services.GetRequiredService<ConfigService>();
-            ApplyTheme(configService.Settings.Theme);
+            var themeService = Services.GetRequiredService<ThemeService>();
+            themeService.ApplyTheme(configService.Settings.Theme);
 
             DebugLogger.Log("正在初始化蓝牙服务...");
             var bluetoothService = Services.GetRequiredService<BluetoothService>();
@@ -152,10 +155,13 @@ public partial class App : System.Windows.Application
             
             _trayIcon = new Hardcodet.Wpf.TaskbarNotification.TaskbarIcon
             {
-                Icon = iconStream != null ? new System.Drawing.Icon(iconStream) : System.Drawing.SystemIcons.Application,
                 ToolTipText = "CyanTooth",
                 ContextMenu = CreateContextMenu()
             };
+
+            // Bind IconSource
+            var binding = new System.Windows.Data.Binding("TrayIconSource");
+            _trayIcon.SetBinding(Hardcodet.Wpf.TaskbarNotification.TaskbarIcon.IconSourceProperty, binding);
 
             _trayIcon.TrayMouseDoubleClick += (s, e) => ShowDetailWindow();
             _trayIcon.TrayLeftMouseUp += (s, e) => ShowFlyout();
@@ -213,7 +219,8 @@ public partial class App : System.Windows.Application
                 _detailWindow.Loaded += (s, e) => 
                 {
                     var configService = Services.GetRequiredService<ConfigService>();
-                    ApplyTheme(configService.Settings.Theme);
+                    var themeService = Services.GetRequiredService<ThemeService>();
+                    themeService.ApplyTheme(configService.Settings.Theme);
                 };
             }
 
@@ -247,7 +254,8 @@ public partial class App : System.Windows.Application
                 _flyoutWindow.Loaded += (s, e) => 
                 {
                     var configService = Services.GetRequiredService<ConfigService>();
-                    ApplyTheme(configService.Settings.Theme);
+                    var themeService = Services.GetRequiredService<ThemeService>();
+                    themeService.ApplyTheme(configService.Settings.Theme);
                 };
             }
 
@@ -292,56 +300,5 @@ public partial class App : System.Windows.Application
         var workArea = SystemParameters.WorkArea;
         window.Left = workArea.Right - window.Width - 10;
         window.Top = workArea.Bottom - window.Height - 10;
-    }
-
-    private static void ApplyTheme(Core.Models.AppTheme theme)
-    {
-        var targetTheme = theme switch
-        {
-            Core.Models.AppTheme.Light => ApplicationTheme.Light,
-            Core.Models.AppTheme.Dark => ApplicationTheme.Dark,
-            _ => ApplicationTheme.Unknown
-        };
-
-        // Determine which custom theme resource to load
-        string themeResourcePath = "Themes/DarkTheme.xaml"; // Default
-        if (theme == Core.Models.AppTheme.Light || (theme == Core.Models.AppTheme.System && ApplicationThemeManager.GetSystemTheme() == SystemTheme.Light))
-        {
-            themeResourcePath = "Themes/LightTheme.xaml";
-        }
-
-        // Apply WPF-UI theme
-        if (targetTheme == ApplicationTheme.Unknown)
-        {
-            ApplicationThemeManager.ApplySystemTheme();
-            // Update resource path if system is actually light
-            if (ApplicationThemeManager.GetSystemTheme() == SystemTheme.Light)
-            {
-                themeResourcePath = "Themes/LightTheme.xaml";
-            }
-        }
-        else
-        {
-            ApplicationThemeManager.Apply(targetTheme);
-        }
-
-        // Apply Custom Theme Resources
-        try 
-        {
-            var dictionaries = Application.Current.Resources.MergedDictionaries;
-            // Remove existing theme dictionaries (check by Source URI ending)
-            var existingTheme = dictionaries.FirstOrDefault(d => d.Source != null && (d.Source.OriginalString.EndsWith("DarkTheme.xaml") || d.Source.OriginalString.EndsWith("LightTheme.xaml")));
-            if (existingTheme != null)
-            {
-                dictionaries.Remove(existingTheme);
-            }
-
-            // Add new theme dictionary
-            dictionaries.Add(new ResourceDictionary { Source = new Uri(themeResourcePath, UriKind.Relative) });
-        }
-        catch (Exception ex)
-        {
-            DebugLogger.LogError($"Failed to apply custom theme {themeResourcePath}", ex);
-        }
     }
 }

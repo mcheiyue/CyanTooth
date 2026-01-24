@@ -95,6 +95,7 @@
                     <DataTemplate>
                         <controls:DeviceCard Device="{Binding}"
                                             IsCompact="True"
+                                            ShowBatteryInFlyout="{Binding DataContext.ShowBatteryInFlyout, ElementName=FlyoutWindowRoot}"
                                             ConnectCommand="{Binding DataContext.ToggleConnectionCommand, ElementName=FlyoutWindowRoot}"
                                             FavoriteCommand="{Binding DataContext.ToggleFavoriteCommand, ElementName=FlyoutWindowRoot}"/>
                     </DataTemplate>

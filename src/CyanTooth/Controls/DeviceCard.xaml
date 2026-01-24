@@ -120,10 +120,33 @@
                               FontSize="12"
                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                     
-                    <!-- Battery info -->
-                    <StackPanel Orientation="Horizontal" 
-                               Margin="12,0,0,0"
-                               Visibility="{Binding HasBattery, Converter={StaticResource BoolToVis}}">
+                    <!-- Battery info (controlled by ShowBatteryInTray when in compact/flyout mode) -->
+                    <StackPanel x:Name="BatteryInfoPanel" Orientation="Horizontal" 
+                               Margin="12,0,0,0">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <!-- Default: show if HasBattery is true -->
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <!-- Show battery when HasBattery is true -->
+                                    <DataTrigger Binding="{Binding HasBattery}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                    <!-- Hide in compact mode when ShowBatteryInFlyout is false -->
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding IsCompact, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True"/>
+                                            <Condition Binding="{Binding ShowBatteryInFlyout, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="False"/>
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </MultiDataTrigger>
+                                    <!-- Also hide when no battery -->
+                                    <DataTrigger Binding="{Binding HasBattery}" Value="False">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
                         <TextBlock Text="{Binding BatteryIcon}" 
                                   FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
                                   FontSize="12"
