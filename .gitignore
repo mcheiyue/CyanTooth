@@ -12,6 +12,7 @@
 [Oo]ut/
 debug.log
 crash.log
+cyantooth_runtime.log
 
 # NuGet
 *.nupkg
