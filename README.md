@@ -18,9 +18,10 @@ CyanTooth 是一款专为 Windows 10/11 设计的现代化蓝牙音频设备管�
 
 ## 📦 下载
 
-您可以从 [Releases](https://github.com/mcheiyue/CyanTooth/releases) 页面下载最新的安装包。
-- `CyanTooth_SelfContained.exe`: 绿色版，直接运行（推荐）。
-- `CyanTooth_FrameworkDependent.exe`: 轻量版，需安装 .NET 8 运行库。
+您可以从 [Releases](https://github.com/mcheiyue/CyanTooth/releases) 页面下载最新的安装包。支持 **x64** 和 **ARM64** 架构。
+
+- `CyanTooth-win-[arch]-standalone.exe`: **绿色独立版**，自带 .NET 运行时，下载即用（推荐）。
+- `CyanTooth-win-[arch]-lightweight.zip`: **轻量版**，体积更小，需要预先安装 [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0)。
 
 ## ✨ 核心特性
 

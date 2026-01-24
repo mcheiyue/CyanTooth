@@ -48,10 +48,11 @@ jobs:
 
     # 1. 轻量版 (Framework-dependent)
     # 不使用 SingleFile，而是普通的 Publish，以保留 runtimeconfig.json，并打成 Zip
+    # 为了避免 "Zip Bomb" 问题，我们将发布内容放在子文件夹 CyanTooth 中
     - name: Publish Lightweight (Zip)
       run: |
-        dotnet publish src/CyanTooth/CyanTooth.csproj -c Release -r win-${{ matrix.arch }} --self-contained false -p:Version=${{ env.clean_version }} -o ./publish_lightweight
-        Compress-Archive -Path ./publish_lightweight/* -DestinationPath ./CyanTooth-win-${{ matrix.arch }}-lightweight.zip
+        dotnet publish src/CyanTooth/CyanTooth.csproj -c Release -r win-${{ matrix.arch }} --self-contained false -p:Version=${{ env.clean_version }} -o ./publish_lightweight/CyanTooth
+        Compress-Archive -Path ./publish_lightweight/CyanTooth -DestinationPath ./CyanTooth-win-${{ matrix.arch }}-lightweight.zip
 
     # 2. 独立版 (Self-contained SingleFile)
     # 开启 R2R (ReadyToRun) 可能导致体积变大，这里权衡后暂不开启 R2R 以减小体积，或者仅使用 Trim (如果不影响反射)
@@ -81,14 +82,26 @@ jobs:
            git log --pretty=format:"- %s (%h)" $PREV_TAG..HEAD >> release_notes.md
         fi
 
-    - name: Create Release
+    # 4. 发布到 GitHub Release
+    # 拆分步骤以避免 Race Condition (只有 x64 更新 release body)
+    - name: Create Release (x64)
+      if: startsWith(github.ref, 'refs/tags/') && matrix.arch == 'x64'
       uses: softprops/action-gh-release@v2
-      if: startsWith(github.ref, 'refs/tags/')
       with:
         files: |
           CyanTooth-win-${{ matrix.arch }}-lightweight.zip
           CyanTooth-win-${{ matrix.arch }}-standalone.exe
-        body_path: ${{ matrix.arch == 'x64' && 'release_notes.md' || '' }}
-        generate_release_notes: ${{ matrix.arch == 'x64' }}
+        body_path: release_notes.md
+        generate_release_notes: true
+        draft: false
+        prerelease: false
+
+    - name: Create Release (Other Architectures)
+      if: startsWith(github.ref, 'refs/tags/') && matrix.arch != 'x64'
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          CyanTooth-win-${{ matrix.arch }}-lightweight.zip
+          CyanTooth-win-${{ matrix.arch }}-standalone.exe
         draft: false
         prerelease: false
