@@ -209,9 +209,12 @@ public partial class App : System.Windows.Application
             if (_detailWindow == null || !_detailWindow.IsLoaded)
             {
                 _detailWindow = new Views.DetailWindow();
-                // Re-apply theme to ensure new window gets correct resources
-                var configService = Services.GetRequiredService<ConfigService>();
-                ApplyTheme(configService.Settings.Theme);
+                // Hook Loaded event to ensure theme is applied AFTER window initialization logic completes
+                _detailWindow.Loaded += (s, e) => 
+                {
+                    var configService = Services.GetRequiredService<ConfigService>();
+                    ApplyTheme(configService.Settings.Theme);
+                };
             }
 
             if (_detailWindow.IsVisible)
@@ -240,9 +243,12 @@ public partial class App : System.Windows.Application
             if (_flyoutWindow == null || !_flyoutWindow.IsLoaded)
             {
                 _flyoutWindow = new Views.FlyoutWindow();
-                // Re-apply theme to ensure new window gets correct resources
-                var configService = Services.GetRequiredService<ConfigService>();
-                ApplyTheme(configService.Settings.Theme);
+                // Hook Loaded event for Flyout as well
+                _flyoutWindow.Loaded += (s, e) => 
+                {
+                    var configService = Services.GetRequiredService<ConfigService>();
+                    ApplyTheme(configService.Settings.Theme);
+                };
             }
 
             if (_flyoutWindow.IsVisible)
