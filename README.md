@@ -29,6 +29,7 @@ CyanTooth 是一款专为 Windows 10/11 设计的现代化蓝牙音频设备管�
 - **⚡ 一键连接/断开** - 告别繁琐的系统设置，一键快速切换音频设备连接状态。
 - **🔋 精准电量显示** - 实时显示设备电量百分比，支持多种协议。
 - **🏷️ 智能设备分类** - 自动识别设备类型（耳机、音箱、键盘、鼠标等）。
+- **🎵 高级音频编解码器支持** - 完美支持 [Alternative A2DP Driver](https://github.com/Diablolend/Alternative-A2DP-Driver)，实时显示 LDAC/aptX/AAC 激活状态。
 - **🎨 现代化 UI** - 基于 WPF-UI 构建，完美融入 Windows 11 设计语言。
 
 ## 🛠️ 技术架构
