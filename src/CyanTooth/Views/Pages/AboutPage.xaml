@@ -5,24 +5,97 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
       mc:Ignorable="d" 
-      d:DesignHeight="450" d:DesignWidth="800"
+      d:DesignHeight="550" d:DesignWidth="800"
       Title="AboutPage">
 
+    <Page.Resources>
+        <Storyboard x:Key="EntranceAnimation">
+            <DoubleAnimation Storyboard.TargetName="MainCard"
+                             Storyboard.TargetProperty="Opacity"
+                             From="0" To="1" Duration="0:0:0.5">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <ThicknessAnimation Storyboard.TargetName="MainCard"
+                                Storyboard.TargetProperty="Margin"
+                                From="0,40,0,0" To="0,0,0,0" Duration="0:0:0.5">
+                <ThicknessAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </ThicknessAnimation.EasingFunction>
+            </ThicknessAnimation>
+        </Storyboard>
+    </Page.Resources>
+    
+    <Page.Triggers>
+        <EventTrigger RoutedEvent="Page.Loaded">
+            <BeginStoryboard Storyboard="{StaticResource EntranceAnimation}"/>
+        </EventTrigger>
+    </Page.Triggers>
+
     <Grid>
-        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-            <ui:SymbolIcon Symbol="Bluetooth24" FontSize="64" Foreground="{DynamicResource AccentFillColorDefaultBrush}" Margin="0,0,0,24"/>
-            <TextBlock Text="CyanTooth" FontSize="24" FontWeight="SemiBold" HorizontalAlignment="Center"/>
-            <TextBlock Text="版本 1.2.0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" Margin="0,4,0,24"/>
+        <Border x:Name="MainCard"
+                VerticalAlignment="Center" 
+                HorizontalAlignment="Center"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource ControlElevationBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="12"
+                Padding="40,32"
+                Width="400"
+                Effect="{DynamicResource DefaultDropShadow}">
+            
+            <StackPanel>
+                <!-- Logo Section -->
+                <Grid Width="80" Height="80" Margin="0,0,0,24">
+                    <Ellipse Fill="{DynamicResource AccentFillColorDefaultBrush}"/>
+                    <ui:SymbolIcon Symbol="Bluetooth24" FontSize="40" Foreground="White"/>
+                </Grid>
 
-            <TextBlock Text="一款现代化的蓝牙设备管理工具" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-            <TextBlock Text="基于 .NET 8 与 WPF-UI 构建" Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center"/>
+                <!-- App Info -->
+                <TextBlock Text="CyanTooth" 
+                           FontSize="28" 
+                           FontWeight="Bold" 
+                           HorizontalAlignment="Center"
+                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                
+                <TextBlock Text="版本 1.2.0 (2026 Preview)" 
+                           FontSize="13" 
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           HorizontalAlignment="Center"
+                           Margin="0,8,0,24"/>
 
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,32,0,0">
-                <ui:HyperlinkButton Content="访问 GitHub" Icon="{ui:SymbolIcon Globe24}" NavigateUri="https://github.com/mcheiyue/CyanTooth"/>
-                <ui:HyperlinkButton Content="提交反馈" Icon="{ui:SymbolIcon Comment24}" NavigateUri="https://github.com/mcheiyue/CyanTooth/issues" Margin="16,0,0,0"/>
+                <TextBlock Text="Designed for the future of audio management." 
+                           TextWrapping="Wrap" 
+                           TextAlignment="Center"
+                           FontSize="14"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Margin="0,0,0,32"/>
+
+                <!-- Action Buttons -->
+                <StackPanel>
+                    <ui:Button Icon="{ui:SymbolIcon Globe24}" 
+                               Content="访问 GitHub 仓库" 
+                               HorizontalAlignment="Stretch"
+                               Appearance="Primary"
+                               Cursor="Hand"
+                               Margin="0,0,0,12"/>
+                               
+                    <ui:Button Icon="{ui:SymbolIcon Comment24}" 
+                               Content="提交反馈与建议" 
+                               HorizontalAlignment="Stretch"
+                               Appearance="Secondary"
+                               Cursor="Hand"/>
+                </StackPanel>
+
+                <!-- Footer -->
+                <TextBlock Text="© 2026 CyanTooth Team. All rights reserved." 
+                           FontSize="11" 
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
+                           HorizontalAlignment="Center" 
+                           Margin="0,32,0,0"
+                           Opacity="0.6"/>
             </StackPanel>
-
-            <TextBlock Text="© 2024 CyanTooth Contributors" FontSize="12" Foreground="{DynamicResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" Margin="0,48,0,0"/>
-        </StackPanel>
+        </Border>
     </Grid>
 </Page>

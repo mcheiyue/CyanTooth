@@ -27,8 +27,18 @@ public class ConfigService
     public ConfigService()
     {
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        var appFolder = Path.Combine(appDataPath, "CyanTooth");
-        Directory.CreateDirectory(appFolder);
+        // Use a dedicated config folder
+        var appFolder = Path.Combine(appDataPath, "CyanTooth", "config");
+        
+        try
+        {
+            Directory.CreateDirectory(appFolder);
+        }
+        catch (Exception ex)
+        {
+            DebugLogger.LogError("Failed to create config directory", ex);
+        }
+        
         _configPath = Path.Combine(appFolder, "settings.json");
         _settings = LoadSettings();
     }
@@ -43,13 +53,15 @@ public class ConfigService
             if (File.Exists(_configPath))
             {
                 var json = File.ReadAllText(_configPath);
+                if (string.IsNullOrWhiteSpace(json)) return new AppSettings();
+                
                 var settings = JsonSerializer.Deserialize<AppSettings>(json, JsonOptions);
                 return settings ?? new AppSettings();
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // Return default settings on error
+            DebugLogger.LogError("Failed to load settings", ex);
         }
 
         return new AppSettings();
@@ -66,9 +78,9 @@ public class ConfigService
             File.WriteAllText(_configPath, json);
             SettingsChanged?.Invoke(this, EventArgs.Empty);
         }
-        catch
+        catch (Exception ex)
         {
-            // Ignore save errors
+            DebugLogger.LogError("Failed to save settings", ex);
         }
     }
 

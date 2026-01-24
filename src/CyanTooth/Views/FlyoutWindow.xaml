@@ -68,7 +68,7 @@
                           Command="{Binding RefreshCommand}"
                           Appearance="Transparent"
                           Padding="8"/>
-                <ui:Button Icon="{ui:SymbolIcon Maximize24}" 
+                <ui:Button Icon="{ui:SymbolIcon Open24}" 
                           ToolTip="详细信息"
                           Click="Detail_Click"
                           Appearance="Transparent"

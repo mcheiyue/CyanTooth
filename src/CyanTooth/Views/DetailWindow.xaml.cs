@@ -11,6 +11,8 @@ namespace CyanTooth.Views;
 /// </summary>
 public partial class DetailWindow : Wpf.Ui.Controls.FluentWindow
 {
+    private bool _hasNavigated = false;
+
     public DetailWindow()
     {
         InitializeComponent();
@@ -28,13 +30,17 @@ public partial class DetailWindow : Wpf.Ui.Controls.FluentWindow
             if (RootNavigation.FooterMenuItems[0] is Wpf.Ui.Controls.NavigationViewItem aboutItem)
                 aboutItem.TargetPageType = typeof(Pages.AboutPage);
             
-            // Navigate to first page
-            RootNavigation.Navigate(typeof(Pages.DevicePage));
-            
             // Ensure back button is hidden
             Loaded += (s, e) => 
             {
                 RootNavigation.IsBackButtonVisible = Wpf.Ui.Controls.NavigationViewBackButtonVisible.Collapsed;
+                
+                // Navigate to first page only if not yet navigated
+                if (!_hasNavigated)
+                {
+                     RootNavigation.Navigate(typeof(Pages.DevicePage));
+                     _hasNavigated = true;
+                }
             };
         }
         catch (Exception ex)

@@ -291,13 +291,45 @@ public partial class App : System.Windows.Application
             _ => ApplicationTheme.Unknown
         };
 
+        // Determine which custom theme resource to load
+        string themeResourcePath = "Themes/DarkTheme.xaml"; // Default
+        if (theme == Core.Models.AppTheme.Light || (theme == Core.Models.AppTheme.System && ApplicationThemeManager.GetSystemTheme() == SystemTheme.Light))
+        {
+            themeResourcePath = "Themes/LightTheme.xaml";
+        }
+
+        // Apply WPF-UI theme
         if (targetTheme == ApplicationTheme.Unknown)
         {
             ApplicationThemeManager.ApplySystemTheme();
+            // Update resource path if system is actually light
+            if (ApplicationThemeManager.GetSystemTheme() == SystemTheme.Light)
+            {
+                themeResourcePath = "Themes/LightTheme.xaml";
+            }
         }
         else
         {
             ApplicationThemeManager.Apply(targetTheme);
+        }
+
+        // Apply Custom Theme Resources
+        try 
+        {
+            var dictionaries = Application.Current.Resources.MergedDictionaries;
+            // Remove existing theme dictionaries (check by Source URI ending)
+            var existingTheme = dictionaries.FirstOrDefault(d => d.Source != null && (d.Source.OriginalString.EndsWith("DarkTheme.xaml") || d.Source.OriginalString.EndsWith("LightTheme.xaml")));
+            if (existingTheme != null)
+            {
+                dictionaries.Remove(existingTheme);
+            }
+
+            // Add new theme dictionary
+            dictionaries.Add(new ResourceDictionary { Source = new Uri(themeResourcePath, UriKind.Relative) });
+        }
+        catch (Exception ex)
+        {
+            DebugLogger.LogError($"Failed to apply custom theme {themeResourcePath}", ex);
         }
     }
 }

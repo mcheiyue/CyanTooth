@@ -9,7 +9,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <ui:ThemesDictionary Theme="Dark"/>
                 <ui:ControlsDictionary/>
-                <ResourceDictionary Source="Themes/DarkTheme.xaml"/>
+                <!-- Removed hardcoded DarkTheme.xaml to allow dynamic theme switching -->
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

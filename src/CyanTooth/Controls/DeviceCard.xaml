@@ -26,6 +26,7 @@
         </Style>
 
         <Style x:Key="BatteryTextStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsLowBattery}" Value="True">
                     <Setter Property="Foreground" Value="{DynamicResource SystemFillColorCautionBrush}"/>
@@ -68,6 +69,7 @@
                 <TextBlock Text="{Binding DeviceIcon}" 
                           FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
                           FontSize="20"
+                          Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                           HorizontalAlignment="Center"
                           VerticalAlignment="Center"/>
                 
@@ -90,6 +92,7 @@
                               Text="{Binding Name}" 
                               FontSize="14" 
                               FontWeight="Medium"
+                              Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                               TextTrimming="CharacterEllipsis"/>
                     
                     <!-- Favorite star -->
