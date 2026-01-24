@@ -49,3 +49,14 @@ public class DeviceRemovedEventArgs : EventArgs
     public string? DeviceName { get; init; }
     public DateTime Timestamp { get; init; } = DateTime.Now;
 }
+
+/// <summary>
+/// Event args for codec changes
+/// </summary>
+public class DeviceCodecChangedEventArgs : EventArgs
+{
+    public required string DeviceId { get; init; }
+    public string? DeviceName { get; init; }
+    public string? NewCodec { get; init; }
+    public DateTime Timestamp { get; init; } = DateTime.Now;
+}

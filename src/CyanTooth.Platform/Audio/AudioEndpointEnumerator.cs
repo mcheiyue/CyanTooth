@@ -1,5 +1,7 @@
 using CyanTooth.Platform.Helpers;
+using Microsoft.Win32;
 using System;
+using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -143,17 +145,28 @@ public class AudioEndpointEnumerator : IDisposable
                                         if (codecVal is uint codecIndex || codecVal is int)
                                         {
                                             uint idx = codecVal is uint u ? u : (uint)(int)codecVal;
-                                            codec = idx switch
-                                            {
-                                                0 => "SBC",
-                                                1 => "AAC",
-                                                2 => "aptX",
-                                                3 => "aptX HD",
-                                                4 => "LDAC",
-                                                5 => "LC3",
-                                                _ => $"Codec {idx}"
-                                            };
+                                            codec = GetCodecName(idx);
                                             DebugLogger.Log($"GetBluetoothAudioEndpoints: Found Codec={codec} for {friendlyName}");
+                                        }
+                                    }
+                                    
+                                    // Fallback: Check for Alternative A2DP Driver (Win10/11)
+                                    // Note: DriverProvider check might fail on some systems (returns empty),
+                                    // so we directly check the registry. If the key exists, AltA2DP is active.
+                                    if (codec == null && connectedDeviceId != null)
+                                    {
+                                        try
+                                        {
+                                            // Direct registry check - more robust than PropertyStore
+                                            codec = GetAltA2DPCodec(connectedDeviceId);
+                                            if (codec != null)
+                                            {
+                                                DebugLogger.Log($"GetBluetoothAudioEndpoints: Found AltA2DP Codec={codec} for {friendlyName}");
+                                            }
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            DebugLogger.Log($"GetBluetoothAudioEndpoints: AltA2DP check failed: {ex.Message}");
                                         }
                                     }
                                 }
@@ -257,6 +270,115 @@ public class AudioEndpointEnumerator : IDisposable
         DebugLogger.Log($"FindEndpointsByMacAddress: {matchedByMac.Count} total matched");
         
         return matchedByMac;
+    }
+
+    private string GetCodecName(uint idx)
+    {
+        return idx switch
+        {
+            0 => "SBC",
+            1 => "AAC",
+            2 => "aptX",
+            3 => "aptX HD",
+            4 => "LDAC",
+            5 => "LC3",
+            _ => $"Codec {idx}"
+        };
+    }
+
+    private string? GetAltA2DPCodec(string connectedDeviceId)
+    {
+        try
+        {
+            // Regex extraction: Look for 12 hex chars surrounded by delimiters
+            var match = Regex.Match(connectedDeviceId, @"&([0-9a-fA-F]{12})_");
+            if (!match.Success) match = Regex.Match(connectedDeviceId, @"dev_([0-9a-fA-F]{12})");
+
+            if (!match.Success) 
+            {
+                // Silence logs for known non-A2DP devices (like HFP)
+                if (!connectedDeviceId.Contains("bthhfenum", StringComparison.OrdinalIgnoreCase))
+                {
+                    DebugLogger.Log($"GetAltA2DPCodec: Could not extract MAC from ID: {connectedDeviceId}");
+                }
+                return null;
+            }
+
+            string mac = match.Groups[1].Value; 
+            
+            // Structure: Devices\Current\0000<MAC_LOWER>
+            string currentPath = @"SYSTEM\CurrentControlSet\Services\AltA2dp\Parameters\Devices\Current";
+            using var currentKey = Registry.LocalMachine.OpenSubKey(currentPath);
+            if (currentKey != null)
+            {
+                string targetSubKey = $"0000{mac.ToLower()}";
+                using var deviceKey = currentKey.OpenSubKey(targetSubKey);
+                if (deviceKey != null)
+                {
+                    return ReadCodecFromKey(deviceKey);
+                }
+            }
+            
+            // Fallback (Old structure): Devices\<MAC>
+            string keyPath = $@"SYSTEM\CurrentControlSet\Services\AltA2dp\Parameters\Devices\{mac.ToUpper()}";
+            using var key = Registry.LocalMachine.OpenSubKey(keyPath);
+            if (key != null) return ReadCodecFromKey(key);
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            DebugLogger.Log($"GetAltA2DPCodec: Failed to read registry: {ex.Message}");
+        }
+        return null;
+    }
+
+    private string? ReadCodecFromKey(RegistryKey key)
+    {
+        // Check 'Opened' status first to ensure we only show codec for active devices
+        // 1 = Active/Streaming/Connected, 0 = Disconnected/Inactive
+        var openedObj = key.GetValue("Opened");
+        if (openedObj is int opened && opened != 1)
+        {
+            return null;
+        }
+
+        // Priority: "Codec" seems to be the dynamic status field updated by the driver.
+        // Putting it first ensures we get the real-time value.
+        var fields = new[] { "Codec", "A2dpCodec", "CodecType", "CodecId" };
+        
+        foreach (var field in fields)
+        {
+            var val = key.GetValue(field);
+            if (val is int intVal)
+            {
+                // Standard mapping: 0=SBC, 1=AAC, 2=aptX, 3=aptX HD, 4=LDAC, 5=LC3
+                return GetCodecName((uint)intVal);
+            }
+        }
+
+        // Special handling for VendorId/CodecId pair if present
+        var vendorId = key.GetValue("VendorId");
+        var vendorCodecId = key.GetValue("VendorCodecId");
+        if (vendorId is int vid && vendorCodecId is int vcid)
+        {
+            return GetVendorCodecName((uint)vid, (uint)vcid);
+        }
+
+        return null;
+    }
+
+    private string GetVendorCodecName(uint vendorId, uint vendorCodecId)
+    {
+        // aptX: Vendor 0x004F, Codec 0x0001
+        // aptX HD: Vendor 0x00D7, Codec 0x0024
+        // LDAC: Vendor 0x012D, Codec 0x00AA
+        
+        if (vendorId == 0x004F && vendorCodecId == 0x0001) return "aptX";
+        if (vendorId == 0x00D7 && vendorCodecId == 0x0024) return "aptX HD";
+        if (vendorId == 0x012D && vendorCodecId == 0x00AA) return "LDAC";
+        
+        return $"Vendor {vendorId:X4}:{vendorCodecId:X4}";
     }
 
     public void Dispose()

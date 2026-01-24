@@ -13,6 +13,7 @@
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <converters:StringNullOrEmptyToVisibilityConverter x:Key="StringToVis"/>
         <converters:ConnectionTooltipConverter x:Key="ConnectionTooltipConverter"/>
+        <converters:CodecToColorConverter x:Key="CodecColor"/>
         
         <Style x:Key="ConnectedIndicatorStyle" TargetType="Ellipse">
             <Setter Property="Width" Value="8"/>
@@ -135,14 +136,19 @@
 
                     <!-- Codec Badge -->
                     <Border Margin="12,0,0,0" 
+                            BorderBrush="{Binding AudioCodec, Converter={StaticResource CodecColor}}"
+                            BorderThickness="1"
                             Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                            CornerRadius="3"
-                            Padding="4,0"
+                            CornerRadius="4"
+                            Padding="6,1"
                             VerticalAlignment="Center">
                         <Border.Style>
                             <Style TargetType="Border">
                                 <Setter Property="Visibility" Value="{Binding AudioCodec, Converter={StaticResource StringToVis}}"/>
                                 <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsConnected}" Value="False">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
                                     <DataTrigger Binding="{Binding IsCompact, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
                                         <Setter Property="Visibility" Value="Collapsed"/>
                                     </DataTrigger>
@@ -152,7 +158,7 @@
                         <TextBlock Text="{Binding AudioCodec}" 
                                    FontSize="10" 
                                    FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                   Foreground="{Binding AudioCodec, Converter={StaticResource CodecColor}}"/>
                     </Border>
                 </StackPanel>
             </StackPanel>

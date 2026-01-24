@@ -26,6 +26,7 @@ public class BluetoothService : IDisposable
 
     public event EventHandler<DeviceConnectionChangedEventArgs>? DeviceConnectionChanged;
     public event EventHandler<DeviceBatteryChangedEventArgs>? DeviceBatteryChanged;
+    public event EventHandler<DeviceCodecChangedEventArgs>? DeviceCodecChanged;
     public event EventHandler<Events.DeviceDiscoveredEventArgs>? DeviceDiscovered;
     public event EventHandler<DeviceRemovedEventArgs>? DeviceRemoved;
     // public event EventHandler? DevicesRefreshed;
@@ -333,10 +334,51 @@ public class BluetoothService : IDisposable
                     IsConnected = e.IsConnected
                 });
 
-                // Re-read battery level on connection change
+                // Re-read battery level and Codec on connection change
                 if (e.IsConnected)
                 {
                     _ = ReadBatteryLevelAsync(e.DeviceId);
+
+                    // Refresh Codec info (delay slightly to allow driver registry update)
+                    Task.Run(async () =>
+                    {
+                        try 
+                        {
+                            await Task.Delay(1500); // Wait 1.5s for AltA2DP to update registry
+                            var audioEndpoints = _audioEnumerator.FindEndpointsByMacAddress(device.Address, device.Name).ToList();
+                            var codecEndpoint = audioEndpoints.FirstOrDefault(ep => !string.IsNullOrEmpty(ep.Codec));
+                            
+                            if (codecEndpoint != null)
+                            {
+                                // Update property on UI thread not strictly required for ObservableObject 
+                                // but good practice if binding engine sensitive, though here we update model directly
+                                device.AudioCodec = codecEndpoint.Codec;
+                                DebugLogger.Log($"OnDeviceUpdated: Device {device.Name} codec refreshed: {device.AudioCodec}");
+
+                                DeviceCodecChanged?.Invoke(this, new DeviceCodecChangedEventArgs
+                                {
+                                    DeviceId = device.Id,
+                                    DeviceName = device.Name,
+                                    NewCodec = device.AudioCodec
+                                });
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            DebugLogger.Log($"OnDeviceUpdated: Codec refresh failed: {ex.Message}");
+                        }
+                    });
+                }
+                else
+                {
+                    // Clear codec info on disconnect
+                    device.AudioCodec = null;
+                    DeviceCodecChanged?.Invoke(this, new DeviceCodecChangedEventArgs
+                    {
+                        DeviceId = device.Id,
+                        DeviceName = device.Name,
+                        NewCodec = null
+                    });
                 }
             }
         }

@@ -63,6 +63,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _bluetoothService.DeviceRemoved += OnDeviceRemoved;
         _bluetoothService.DeviceConnectionChanged += OnDeviceConnectionChanged;
         _bluetoothService.DeviceBatteryChanged += OnDeviceBatteryChanged;
+        _bluetoothService.DeviceCodecChanged += OnDeviceCodecChanged;
     }
 
     public void Initialize()
@@ -284,11 +285,25 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _notificationService.ShowLowBatteryNotification(e);
     }
 
+    private void OnDeviceCodecChanged(object? sender, Core.Events.DeviceCodecChangedEventArgs e)
+    {
+        App.Current.Dispatcher.Invoke(() =>
+        {
+            var device = Devices.FirstOrDefault(d => d.Id == e.DeviceId);
+            if (device != null)
+            {
+                device.AudioCodec = e.NewCodec;
+                DebugLogger.Log($"MainViewModel.OnDeviceCodecChanged: Device {device.Name} codec updated to {device.AudioCodec}");
+            }
+        });
+    }
+
     public void Dispose()
     {
         _bluetoothService.DeviceDiscovered -= OnDeviceDiscovered;
         _bluetoothService.DeviceRemoved -= OnDeviceRemoved;
         _bluetoothService.DeviceConnectionChanged -= OnDeviceConnectionChanged;
         _bluetoothService.DeviceBatteryChanged -= OnDeviceBatteryChanged;
+        _bluetoothService.DeviceCodecChanged -= OnDeviceCodecChanged;
     }
 }

@@ -68,6 +68,29 @@
                 </ComboBox>
             </ui:CardControl>
 
+            <!-- Audio Codec Info -->
+            <TextBlock Text="音频编码支持" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,24,0,12"/>
+
+            <ui:CardExpander Header="关于编码格式检测" Icon="{ui:SymbolIcon MusicNote224}" Margin="0,0,0,8">
+                <StackPanel Margin="8">
+                    <TextBlock Text="CyanTooth 支持显示当前蓝牙连接使用的编码格式（如 LDAC, aptX, AAC, SBC）。" 
+                             TextWrapping="Wrap" Margin="0,0,0,8"/>
+                    
+                    <TextBlock Text="• Windows 11 (22H2+)" FontWeight="SemiBold"/>
+                    <TextBlock Text="  系统原生支持检测 SBC 和 AAC 编码。" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                    
+                    <TextBlock Text="• Windows 10 或 高级编码 (LDAC/aptX)" FontWeight="SemiBold" Margin="0,4,0,0"/>
+                    <TextBlock Text="  需要安装第三方驱动 'Alternative A2DP Driver' 才能启用和检测这些高级格式。" 
+                             TextWrapping="Wrap" Margin="0,0,0,4"/>
+                    <TextBlock Text="  如果在 Windows 10 上未显示标签，请检查驱动是否安装并正确配置。" 
+                             TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    
+                    <ui:HyperlinkButton Content="访问 Alternative A2DP Driver 官网" 
+                                      NavigateUri="https://www.bluetoothgoodies.com/a2dp/" 
+                                      Margin="-12,4,0,0"/>
+                </StackPanel>
+            </ui:CardExpander>
+
             <!-- Advanced Section -->
             <TextBlock Text="高级" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,24,0,12"/>
 
