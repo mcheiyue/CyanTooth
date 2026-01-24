@@ -65,7 +65,7 @@
                            HorizontalAlignment="Center"
                            Margin="0,8,0,24"/>
 
-                <TextBlock Text="Designed for the future of audio management." 
+                <TextBlock Text="专为未来音频管理而设计。" 
                            TextWrapping="Wrap" 
                            TextAlignment="Center"
                            FontSize="14"
@@ -79,12 +79,14 @@
                                HorizontalAlignment="Stretch"
                                Appearance="Primary"
                                Cursor="Hand"
+                               Click="OnGithubClick"
                                Margin="0,0,0,12"/>
                                
                     <ui:Button Icon="{ui:SymbolIcon Comment24}" 
                                Content="提交反馈与建议" 
                                HorizontalAlignment="Stretch"
                                Appearance="Secondary"
+                               Click="OnFeedbackClick"
                                Cursor="Hand"/>
                 </StackPanel>
 
