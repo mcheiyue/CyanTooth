@@ -35,7 +35,7 @@ jobs:
     
     - name: 发布应用 (Release Only)
       if: matrix.configuration == 'Release'
-      run: dotnet publish src/CyanTooth/CyanTooth.csproj -c Release -r win-${{ matrix.platform }} --self-contained true -p:PublishSingleFile=true -o ./publish --no-build
+      run: dotnet publish src/CyanTooth/CyanTooth.csproj -c Release -r win-${{ matrix.platform }} --self-contained true -p:PublishSingleFile=true -o ./publish
 
     - name: 上传构建产物 (Release Only)
       if: matrix.configuration == 'Release'
