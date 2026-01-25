@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
+using CyanTooth.Platform.Helpers;
 
 namespace CyanTooth.Views.Pages;
 
@@ -33,14 +34,16 @@ public partial class AboutPage : Page
         }
         catch (System.Exception ex)
         {
+            DebugLogger.LogError($"Failed to open URL '{url}' with default browser", ex);
+            
             // Fallback for some environments
             try 
             {
                 Process.Start("explorer.exe", url);
             }
-            catch
+            catch (System.Exception fallbackEx)
             {
-                // Ignore if both fail
+                DebugLogger.LogError($"Failed to open URL '{url}' with explorer.exe", fallbackEx);
             }
         }
     }
